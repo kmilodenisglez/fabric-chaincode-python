@@ -1,44 +1,65 @@
 Protobufs / How to handle `fabric-protos`
-========================================
+=========================================
 
-Resumen
+Summary
 -------
 
-Hyperledger Fabric define sus interfaces gRPC en `fabric-protos` (Apache-2.0). Para implementar un shim en Python hay dos opciones razonables:
+Hyperledger Fabric defines its gRPC interfaces in the `fabric-protos` repository
+(Apache-2.0). When implementing a Python shim you generally have two practical
+options:
 
-1. "Submodular / generar": Mantener `fabric-protos` como submódulo (o referenciar una versión fija), y generar los archivos Python (`*_pb2.py`, `*_pb2_grpc.py`) con `grpc_tools.protoc` usando `scripts/gen_protos.sh`. Opcionalmente, incluir los archivos generados en `src/protos/` para simplificar la instalación de usuarios.
+1. "Submodule and generate": Add `fabric-protos` as a submodule (or reference a
+	 fixed tag) and generate Python bindings (`*_pb2.py`, `*_pb2_grpc.py`) using
+	 `grpc_tools.protoc` or `protoc` with a Python plugin. The provided
+	 `scripts/gen_protos.sh` can be used for this. Optionally include the
+	 generated files in the package for releases to simplify consumers' setup.
 
-2. "Empaquetar protos pre-generados": Incluir directamente los archivos Python generados en el paquete (`src/`), y documentar la versión de `fabric-protos` usada. Esto evita que los consumidores instalen `grpc_tools` para usar la librería.
+2. "Package pre-generated protos": Commit the generated Python bindings into
+	 the repository/package and document the exact `fabric-protos` version used to
+	 generate them. This avoids requiring consumers to generate bindings locally.
 
-Recomendación (mejor equilibrio al comenzar)
-------------------------------------------
+Recommendation (practical balance)
+----------------------------------
 
-- Use `fabric-protos` como submódulo apuntando a la versión que quiere soportar (por ejemplo `v2.4.0`). Esto preserva el historial y permite reproducibilidad.
-- Añada `scripts/gen_protos.sh` (ya existe) para generar bindings. Committee los archivos generados en `src/protos/` solo para releases (o para facilitar pruebas), pero mantenga la fuente `.proto` separada.
-- En `pyproject.toml` incluya los archivos generados en el paquete (o genere en la fase de `bdist_wheel`). En CI, genere y valide que los archivos generados son consistentes con el submódulo.
-- No publique un paquete PyPI con el nombre `fabric-protos-python` que pueda confundirse con proyectos oficiales; si usted ya tiene un paquete con ese nombre, prefiera un nombre con un prefijo (por ejemplo `fabric_protos_py` o `hyperledger_fabric_protos_py`) y documente claramente la compatibilidad de versión.
+- Use `fabric-protos` as a submodule pinned to the exact tag you support. This
+	preserves provenance and makes regenerating bindings reproducible.
+- Keep `scripts/gen_protos.sh` in the repo as a canonical way to regenerate
+	bindings. Commit generated bindings for release artifacts (or for ease of
+	testing), but avoid mixing `.proto` sources into the runtime package unless
+	required.
+- In CI, either regenerate the bindings and compare them with the committed
+	files, or regenerate them as part of the release build to ensure consistency.
+- Avoid publishing a PyPI package name that could be confused with an official
+	upstream package (e.g. `fabric-protos-python`). If publishing generated
+	bindings, choose a clear, distinct package name and document compatibility.
 
-Pasos prácticos (ejemplo)
+Practical steps (example)
 -------------------------
 
-1. Añadir `fabric-protos` como submódulo:
+1. Add `fabric-protos` as a submodule and pin to a tag:
 
 ```bash
-git submodule add --depth 1 -b v2.4.0 https://github.com/hyperledger/fabric-protos.git protos/fabric-protos
+git submodule add --depth 1 -b v2.5.0 https://github.com/hyperledger/fabric-protos.git protos/fabric-protos
 git submodule update --init --recursive
 ```
 
-2. Generar los protos Python (desde la raíz del repo):
+2. Generate Python bindings (run from the repository root):
 
 ```bash
 cd ./fabric-chaincode-python
-./scripts/gen_protos.sh
-# los archivos generados irán a src/protos/ por defecto
+PROTO_SRC=protos/fabric-protos bash scripts/gen_protos.sh
+# generated files will be placed where the script is configured (e.g. fabric_protos_python/)
 ```
 
-3. Validar en CI que los protos generados son consistentes o regenerarlos en la fase de build.
+3. In CI: either regenerate and `git diff` against committed bindings to detect
+	 drift, or regenerate in the build environment so wheel artifacts include the
+	 bindings.
 
-Licencia
---------
+License
+-------
 
-`fabric-protos` está bajo Apache-2.0. Si incluye `.proto` o archivos generados en su repo, conserve la referencia de licencia (no elimine los archivos LICENSE de `fabric-protos` si los copia). Esto es necesario para poder migrar a Hyperledger Labs sin problemas.
+`fabric-protos` is licensed under Apache-2.0. If you include `.proto` files or
+generated bindings from that repository in your project, retain the original
+license notice (do not remove the `LICENSE` files from the `fabric-protos`
+source when copying). This is important if you plan to contribute or migrate the
+project to Hyperledger Labs.
