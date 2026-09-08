@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fabric-chaincode-python"
+version = "0.1.0"
+description = "Hyperledger Fabric chaincode shim and contract API for Python (experimental)"
+requires-python = ">=3.10"
+dependencies = [
+    "grpcio>=1.51.3",
+    "fabric-protos-python==2.4"
+]
+
+[tool.pytest]
+asyncio_mode = "auto"
