@@ -13,6 +13,41 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      - name: Debug: runner and repository state
+        run: |
+          echo "--- GitHub context ---"
+          echo "GITHUB_REF=$GITHUB_REF"
+          echo "GITHUB_SHA=$GITHUB_SHA"
+          echo "GITHUB_EVENT_NAME=$GITHUB_EVENT_NAME"
+          echo "GITHUB_RUN_ID=$GITHUB_RUN_ID"
+          echo "GITHUB_WORKFLOW=$GITHUB_WORKFLOW"
+          echo "--- Git info ---"
+          git --no-pager log -1 --pretty=fuller || true
+          echo "Current branch:"; git rev-parse --abbrev-ref HEAD || true
+          echo "Tags pointing at HEAD:"; git tag --points-at HEAD || true
+          echo "Describe:"; git describe --tags --exact-match 2>/dev/null || true
+          echo "Git status:"; git status --porcelain || true
+          echo "--- Files ---"
+          ls -la || true
+          ls -la src || true
+          ls -la fabric_protos_python || true
+          echo "--- Project files ---"
+          test -f pyproject.toml && sed -n '1,200p' pyproject.toml || echo 'no pyproject'
+          test -f setup.py && sed -n '1,200p' setup.py || echo 'no setup.py'
+          echo "--- Python environment ---"
+          which python || true
+          python -V || true
+          which pip || true
+          pip -V || true
+          pip list --format=columns || true
+          echo "--- SYS.PATH ---"
+          python - <<'PY'
+import sys
+print('\n'.join(sys.path))
+PY
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
