@@ -4,12 +4,19 @@
 import io
 import os
 from setuptools import setup, find_packages
-from src import VERSION
 
+# Load the package version without importing the `src` package. Importing the
+# package during an isolated build can fail because dependencies are not yet
+# installed. Read and exec the version file into a temporary namespace instead.
 ROOT_DIR = os.path.dirname(__file__)
-SOURCE_DIR = os.path.join(ROOT_DIR)
-
-exec(open('src/version.py').read())
+version_ns: dict = {}
+version_path = os.path.join(ROOT_DIR, 'src', 'version.py')
+try:
+    with open(version_path, 'r', encoding='utf-8') as vf:
+        exec(vf.read(), version_ns)
+    VERSION = version_ns.get('VERSION', '0.0.0')
+except FileNotFoundError:
+    VERSION = '0.0.0'
 
 def _read_requirements(path: str):
     try:
