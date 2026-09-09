@@ -1,0 +1,11 @@
+# Token Chaincode Example Requirements
+# Install with: pip install -r requirements.txt
+
+# Parent package (fabric-chaincode-python)
+# When running in the parent directory:
+# -e ../..
+
+# If running standalone, uncomment the direct dependencies:
+# grpcio>=1.83.1
+# protobuf>=3.20.0,<4.0.0
+# grpclib>=0.4.3
