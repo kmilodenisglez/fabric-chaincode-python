@@ -77,6 +77,12 @@ Contributing
 	DCO check workflow).
 - The project uses the Apache-2.0 license.
 
+Releasing
+---------
+For information on how to create releases and publish to PyPI, see [RELEASING.md](RELEASING.md).
+
 More information
 ----------------
-See `PROTOS.md` for guidance on handling Fabric protobufs and `scripts/gen_protos.sh` for regeneration instructions.
+- [RELEASING.md](RELEASING.md) — Release process and PyPI publishing
+- [PROTOS.md](PROTOS.md) — Guidance on handling Fabric protobufs
+- `scripts/gen_protos.sh` — Protobuf binding regeneration instructions
