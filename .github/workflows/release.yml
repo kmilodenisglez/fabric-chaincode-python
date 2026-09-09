@@ -38,7 +38,6 @@ jobs:
           path: dist/*.whl
 
       - name: Publish to PyPI
-        if: ${{ secrets.PYPI_API_TOKEN }}
         run: |
           pip install twine
           python -m twine upload dist/*.whl -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
