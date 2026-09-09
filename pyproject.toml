@@ -6,11 +6,17 @@ build-backend = "setuptools.build_meta"
 name = "fabric-chaincode-python"
 version = "0.1.0"
 description = "Hyperledger Fabric chaincode shim and contract API for Python (experimental)"
+readme = "README.md"
+license = {text = "Apache License v2.0"}
 requires-python = ">=3.10"
 dependencies = [
     "grpcio>=1.51.3",
-    "fabric-protos-python==2.4"
+    "grpclib>=0.4.3",
+    "protobuf>=7.35.1"
 ]
+keywords = ["Hyperledger", "Fabric", "Chaincode", "Python"]
 
-[tool.pytest]
+[tool.pytest.ini_options]
 asyncio_mode = "auto"
+testpaths = ["tests"]
+
