@@ -38,6 +38,10 @@ jobs:
           path: dist/*.whl
 
       - name: Publish to PyPI
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+        continue-on-error: true
         run: |
           pip install twine
           python -m twine upload dist/*.whl -u __token__ -p ${{ secrets.PYPI_API_TOKEN }}
+        env:
+          TWINE_SKIP_EMPTY: 'true'
