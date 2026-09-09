@@ -163,3 +163,6 @@ dmypy.json
 
 # Docker overrides
 docker-compose.override.yml
+# Test/build artifacts for CCAAS packaging
+chaincode-external/
+ccaasserver.log

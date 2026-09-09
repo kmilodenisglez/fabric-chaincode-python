@@ -44,7 +44,12 @@ class ChaincodeStub(ChaincodeStubInterface):
 
                 try:
                     header = cm_pb.Header.FromString(proposal.header)
-                    decoded_sp['proposal']['header'] = header
+                    # Use a dict for the decoded header fields rather than assigning
+                    # the protobuf Header object directly (protobuf objects don't
+                    # support item assignment). Keep the parsed `header` protobuf
+                    # in a local variable for further extraction.
+                    decoded_sp['proposal']['header'] = {}
+                    decoded_sp['proposal']['header']['_raw_header'] = header
                 except Exception as e:
                     raise Exception('Could not extract the header from the proposal: ' + str(e))
 

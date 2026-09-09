@@ -1,0 +1,5 @@
+# Fabric Chaincode Python - CCAAS Example
+# Install dependencies with: pip install -r requirements.txt
+
+grpcio>=1.83.1
+protobuf>=3.20.0,<4.0.0
