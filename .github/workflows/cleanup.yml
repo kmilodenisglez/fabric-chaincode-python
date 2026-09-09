@@ -1,0 +1,69 @@
+name: Cleanup Old Workflow Runs
+
+on:
+  schedule:
+    # Ejecutar diariamente a las 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+
+    steps:
+      - name: Delete old workflow runs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const repo = context.repo;
+            const owner = repo.owner;
+            const repoName = repo.repo;
+            
+            // Obtener todos los runs completados
+            const allRuns = await github.rest.actions.listWorkflowRuns({
+              owner: owner,
+              repo: repoName,
+              per_page: 100,
+              status: 'completed'
+            });
+            
+            console.log(`Total runs encontrados: ${allRuns.data.workflow_runs.length}`);
+            
+            // Mantener solo los últimos 10 runs por workflow
+            const runsToKeep = 10;
+            const runsByWorkflow = {};
+            
+            for (const run of allRuns.data.workflow_runs) {
+              const workflowId = run.workflow_id;
+              if (!runsByWorkflow[workflowId]) {
+                runsByWorkflow[workflowId] = [];
+              }
+              runsByWorkflow[workflowId].push(run);
+            }
+            
+            let deletedCount = 0;
+            
+            for (const [workflowId, runs] of Object.entries(runsByWorkflow)) {
+              // Ordenar por fecha de creación (más recientes primero)
+              runs.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+              
+              // Eliminar los runs más antiguos (después de los primeros runsToKeep)
+              for (let i = runsToKeep; i < runs.length; i++) {
+                const run = runs[i];
+                try {
+                  await github.rest.actions.deleteWorkflowRun({
+                    owner: owner,
+                    repo: repoName,
+                    run_id: run.id
+                  });
+                  console.log(`✓ Deleted run ${run.id} (${run.name} - ${run.created_at})`);
+                  deletedCount++;
+                } catch (error) {
+                  console.log(`✗ Failed to delete run ${run.id}: ${error.message}`);
+                }
+              }
+            }
+            
+            console.log(`\nTotal runs eliminados: ${deletedCount}`);
