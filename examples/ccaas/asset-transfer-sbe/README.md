@@ -55,7 +55,6 @@ pip install -r requirements.txt
 export CHAINCODE_ID=asset_transfer_sbe_1:<package_hash>
 export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 
-cd examples/ccaas/asset-transfer-sbe
 python main.py
 ```
 
