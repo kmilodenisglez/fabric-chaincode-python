@@ -2,29 +2,62 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
+      - release-2.5
   pull_request:
+    branches:
+      - main
+      - release-2.5
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Run steps at the repository root (no custom working-directory)
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Compute DCO commit range
+        id: dco_range
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "range=${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "push" && "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]]; then
+            echo "range=${{ github.event.before }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "range=${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Check DCO (Signed-off-by)
         run: |
           chmod +x scripts/check_dco.sh
-          ./scripts/check_dco.sh HEAD
+          ./scripts/check_dco.sh "${{ steps.dco_range.outputs.range }}"
+
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: |
+            requirements.txt
+            pyproject.toml
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio
+          python -m pip install -r requirements.txt pytest pytest-asyncio
+
       - name: Run tests
         run: |
           python -m pytest -q
