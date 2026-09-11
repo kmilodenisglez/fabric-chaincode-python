@@ -4,7 +4,7 @@ This directory contains example implementations of Hyperledger Fabric Python cha
 
 ## Available Examples
 
-### [ccaas-basic](./ccaas-basic/)
+### [ccaas/asset-transfer-basic](./ccaas/asset-transfer-basic/)
 
 A complete, ready-to-run example of a Python chaincode deployed as a **Chaincode-as-a-Service (CCAAS)**.
 
@@ -16,9 +16,18 @@ A complete, ready-to-run example of a Python chaincode deployed as a **Chaincode
 - Production-ready error handling
 
 **Quick Links:**
-- [README](./ccaas-basic/README.md) - Detailed setup and usage guide
-- [main.py](./ccaas-basic/main.py) - Chaincode implementation
-- [Dockerfile](./ccaas-basic/Dockerfile) - Docker build configuration
+- [README](./ccaas/asset-transfer-basic/README.md) - Detailed setup and usage guide
+- [main.py](./ccaas/asset-transfer-basic/main.py) - Chaincode implementation
+- [Dockerfile](./ccaas/asset-transfer-basic/Dockerfile) - Docker build configuration
+
+### [ccaas/asset-transfer-sbe](./ccaas/asset-transfer-sbe/)
+
+State-based-endorsement style asset transfer sample aligned with Fabric naming and function set.
+
+**Quick Links:**
+- [README](./ccaas/asset-transfer-sbe/README.md)
+- [main.py](./ccaas/asset-transfer-sbe/main.py)
+- [Dockerfile](./ccaas/asset-transfer-sbe/Dockerfile)
 
 ## What is CCAAS?
 
@@ -30,7 +39,7 @@ A complete, ready-to-run example of a Python chaincode deployed as a **Chaincode
 
 ## Getting Started
 
-1. **Choose an Example:** Start with `ccaas-basic` for a complete working example
+1. **Choose an Example:** Start with `ccaas/asset-transfer-basic` for a complete working example
 2. **Follow Setup Instructions:** Each example has a README with step-by-step instructions
 3. **Test on Local Network:** Use Fabric's `test-network-nano-bash` for testing
 4. **Adapt for Your Use Case:** Modify the chaincode logic for your specific needs
@@ -39,7 +48,7 @@ A complete, ready-to-run example of a Python chaincode deployed as a **Chaincode
 
 ### Create a New Example
 1. Create a new folder under `examples/`
-2. Copy the structure from `ccaas-basic/`
+2. Copy the structure from `ccaas/asset-transfer-basic/`
 3. Modify `main.py` for your chaincode logic
 4. Update README with your specific instructions
 
