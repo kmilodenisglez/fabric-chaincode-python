@@ -2,7 +2,11 @@
 # contributors. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 from src.fabric_shim.interfaces import ChaincodeStubInterface
-from src.fabric_shim.utils import *
+from src.fabric_shim.utils import (
+    COMPOSITEKEY_NS,
+    MIN_UNICODE_RUNE_VALUE,
+    validate_composite_key_attribute,
+)
 from fabric_protos_python.peer import chaincode_pb2 as pb
 from fabric_protos_python.common import common_pb2 as cm_pb
 from fabric_protos_python.peer import proposal_pb2 as pr_pb
@@ -23,6 +27,9 @@ class ChaincodeStub(ChaincodeStubInterface):
         self.tx_id = tx_id
         self.cc_input = cc_input
         self.signed_proposal_pb = signed_proposal_pb
+        self.creator = {}
+        self.tx_timestamp = None
+        self.proposal = None
         self.validationParameterMetakey = VALIDATION_PARAMETER
 
         if self.signed_proposal_pb:
@@ -104,6 +111,8 @@ class ChaincodeStub(ChaincodeStubInterface):
     def get_function_and_parameters(self):
         """Get function name and parameters of the chaincode calling transaction"""
         args = [arg.decode() for arg in self.cc_input.args]
+        if len(args) == 0:
+            raise Exception('no function name provided in transaction payload')
         function: str = args[0]
         params = args[1:]
 
