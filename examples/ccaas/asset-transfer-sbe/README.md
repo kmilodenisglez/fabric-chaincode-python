@@ -1,13 +1,16 @@
-# Token Chaincode - CCAAS Example
+# Asset Transfer SBE - CCAAS Example
 
-This directory contains a complete example of a Hyperledger Fabric Python chaincode for token management deployed as a Chaincode-as-a-Service (CCAAS).
+This directory contains a complete example of a Hyperledger Fabric Python chaincode aligned with the `asset-transfer-sbe` sample and deployed as Chaincode-as-a-Service (CCAAS).
 
 ## Overview
 
-This example implements a simple token system where you can:
-- **reset** - Reset token balances for all accounts (equivalent to init)
-- **balance** - Query the token balance of an account
-- **transfer** - Transfer tokens from one account to another
+This example implements the `asset-transfer-sbe` function set:
+- **CreateAsset**
+- **ReadAsset**
+- **UpdateAsset**
+- **DeleteAsset**
+- **TransferAsset**
+- **AssetExists**
 
 ## Features
 
@@ -42,17 +45,17 @@ pip install -r requirements.txt
 ### 2. Install Example Dependencies
 
 ```bash
-cd examples/token_chaincode
+cd examples/ccaas/asset-transfer-sbe
 pip install -r requirements.txt
 ```
 
 ### 3. Run the Chaincode Server
 
 ```bash
-export CHAINCODE_ID=token_1.0:sha256:your_package_hash
+export CHAINCODE_ID=asset_transfer_sbe_1:<package_hash>
 export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 
-cd examples/token_chaincode
+cd examples/ccaas/asset-transfer-sbe
 python main.py
 ```
 
@@ -60,25 +63,19 @@ The chaincode server will start and wait for connections from a Fabric peer.
 
 ### 4. Invoke Chaincode Functions
 
-**Initialize/Reset tokens:**
+**Create asset:**
 ```bash
-peer chaincode invoke -C mychannel -n token_1.0 -c '{"function":"reset","Args":[]}'
+peer chaincode invoke -C mychannel -n asset-transfer-sbe -c '{"Args":["CreateAsset","asset1","100","alice"]}'
 ```
 
-**Query balance:**
+**Read asset:**
 ```bash
-peer chaincode query -C mychannel -n token_1.0 -c '{"function":"balance","Args":["tommy"]}'
+peer chaincode query -C mychannel -n asset-transfer-sbe -c '{"Args":["ReadAsset","asset1"]}'
 ```
 
-**Transfer tokens:**
+**Transfer asset:**
 ```bash
-peer chaincode invoke -C mychannel -n token_1.0 -c '{"function":"transfer","Args":["tommy","jerry","100"]}'
-```
-
-**Check new balances:**
-```bash
-peer chaincode query -C mychannel -n token_1.0 -c '{"function":"balance","Args":["tommy"]}'
-peer chaincode query -C mychannel -n token_1.0 -c '{"function":"balance","Args":["jerry"]}'
+peer chaincode invoke -C mychannel -n asset-transfer-sbe -c '{"Args":["TransferAsset","asset1","bob","Org2MSP"]}'
 ```
 
 ## Docker Deployment
@@ -86,18 +83,18 @@ peer chaincode query -C mychannel -n token_1.0 -c '{"function":"balance","Args":
 ### Build the Docker Image
 
 ```bash
-docker build -t token-chaincode:latest .
+docker build -f examples/ccaas/asset-transfer-sbe/Dockerfile -t asset-transfer-sbe:latest .
 ```
 
 ### Run in Docker
 
 ```bash
 docker run -d \
-  --name token-chaincode \
-  -e CHAINCODE_ID=token_1.0:sha256:your_hash \
+  --name asset-transfer-sbe \
+  -e CHAINCODE_ID=asset_transfer_sbe_1:<package_hash> \
   -e CHAINCODE_SERVER_ADDRESS=0.0.0.0:9999 \
   -p 9999:9999 \
-  token-chaincode:latest
+  asset-transfer-sbe:latest
 ```
 
 ### Use in Fabric Network
@@ -107,7 +104,7 @@ Package and deploy the chaincode to your Fabric network following the [official 
 ## Project Structure
 
 ```
-token_chaincode/
+asset-transfer-sbe/
 ├── main.py               # Chaincode implementation
 ├── requirements.txt      # Python dependencies
 ├── Dockerfile           # Container image definition
@@ -119,30 +116,14 @@ token_chaincode/
 
 ### Functions
 
-#### `reset`
-Initializes/resets token balances for test accounts.
+#### `CreateAsset(assetId, value, owner)`
+Creates a new asset and records owner/org metadata.
 
-**Parameters:** None
+#### `ReadAsset(assetId)`
+Returns the stored JSON for one asset.
 
-**Returns:** `success: b'init ok'` or error message
-
-#### `balance`
-Queries the token balance of an account.
-
-**Parameters:**
-- `account` (string): Account name
-
-**Returns:** `success: b'balance => <amount>'` or error message
-
-#### `transfer`
-Transfers tokens from one account to another.
-
-**Parameters:**
-- `from` (string): Source account name
-- `to` (string): Destination account name
-- `amount` (string): Amount to transfer (must be convertible to integer)
-
-**Returns:** `success: b'transfer ok'` or error message
+#### `TransferAsset(assetId, newOwner, newOwnerOrg)`
+Transfers ownership fields to a new owner/org.
 
 ## Error Handling
 
@@ -175,7 +156,7 @@ logging.basicConfig(level=logging.INFO)  # Change to INFO, WARNING, etc.
 
 ## Related Examples
 
-- [Asset Transfer (CCAAS)](../ccaas/) - More complex asset management example
+- [Asset Transfer Basic (CCAAS)](../asset-transfer-basic/) - Baseline asset transfer example
 - [Fabric Chaincode Python Documentation](../../README.md)
 
 ## License

@@ -39,8 +39,8 @@ From the repository root:
 mkdir -p chaincode-external/package
 
 # Copy connection and metadata files
-cp examples/ccaas-basic/connection.json chaincode-external/package/
-cp examples/ccaas-basic/metadata.json chaincode-external/
+cp examples/ccaas/asset-transfer-basic/connection.json chaincode-external/package/
+cp examples/ccaas/asset-transfer-basic/metadata.json chaincode-external/
 
 # Package it
 cd chaincode-external
@@ -101,7 +101,7 @@ PACKAGE_ID=$(peer lifecycle chaincode queryinstalled --output json | \
 cd /path/to/fabric-chaincode-python
 export CHAINCODE_ID="$PACKAGE_ID"
 export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
-python examples/ccaas-basic/main.py
+python examples/ccaas/asset-transfer-basic/main.py
 ```
 
 ### 6. Invoke & Query
@@ -137,7 +137,7 @@ peer chaincode query \
 To run the chaincode in a Docker container:
 
 ```bash
-cd /path/to/fabric-chaincode-python/examples/ccaas-basic
+cd /path/to/fabric-chaincode-python/examples/ccaas/asset-transfer-basic
 
 # Build the image
 docker build -t fabric-python-ccaas .
@@ -156,7 +156,7 @@ docker run --rm \
 ## File Structure
 
 ```
-examples/ccaas-basic/
+examples/ccaas/asset-transfer-basic/
 ├── main.py                # Chaincode implementation
 ├── connection.json        # Peer connection configuration
 ├── metadata.json          # CCAAS metadata (type: "ccaas")
