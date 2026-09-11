@@ -1,10 +1,6 @@
 name: Cleanup Old Workflow Runs
 
 on:
-  push:
-    branches:
-      - main
-      - release-2.5
   schedule:
     # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
@@ -13,7 +9,7 @@ on:
       keep_runs:
         description: Number of latest completed runs to keep per workflow
         required: false
-        default: '15'
+        default: '10'
 
 jobs:
   cleanup:
@@ -32,7 +28,7 @@ jobs:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const defaultKeep = 15;
+            const defaultKeep = 10;
             const inputKeep = Number(context.payload.inputs?.keep_runs || defaultKeep);
             const runsToKeep = Number.isFinite(inputKeep) && inputKeep > 0 ? inputKeep : defaultKeep;
 
