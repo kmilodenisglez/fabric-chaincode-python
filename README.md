@@ -11,7 +11,7 @@ Requirements
 ------------
 - Python 3.10+ (3.11 recommended)
 - See `requirements.txt` for runtime dependencies. Key packages:
-	- `grpcio==1.51.3`
+	- `grpcio==1.83.1`
 	- `protobuf>=7.35.1`
 	- `grpclib==0.4.3`
 

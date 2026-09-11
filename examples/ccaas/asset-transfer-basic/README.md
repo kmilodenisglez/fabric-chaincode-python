@@ -28,7 +28,6 @@ cd /path/to/fabric-chaincode-python
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-pip install "grpcio>=1.83.1"
 ```
 
 ### 2. Package the Chaincode
@@ -94,14 +93,18 @@ source .venv/bin/activate
 cd /path/to/test-network-nano-bash
 . ./peer1admin.sh
 PACKAGE_ID=$(peer lifecycle chaincode queryinstalled --output json | \
-  jq -r '.installed_chaincodes[] | select(.references.mychannel? != null) | \
-  select(.references.mychannel.chaincodes[]? .name=="basic") | .package_id')
+  jq -r '
+  .installed_chaincodes[]
+  | select(.references.mychannel? != null)
+  | select(any(.references.mychannel.chaincodes[]?; .name == "basic"))
+  | .package_id
+  ')
 
 # Start the server
 cd /path/to/fabric-chaincode-python
 export CHAINCODE_ID="$PACKAGE_ID"
 export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
-python examples/ccaas/asset-transfer-basic/main.py
+./.venv/bin/python examples/ccaas/asset-transfer-basic/main.py
 ```
 
 ### 6. Invoke & Query
@@ -183,7 +186,8 @@ Tells Fabric that this is a CCAAS package:
 ### Server won't start
 - Ensure `CHAINCODE_ID` matches the package-id from `peer lifecycle chaincode install`
 - Check that `connection.json` address is accessible from the peer
-- Verify gRPC is installed: `pip install "grpcio>=1.83.1"`
+- Verify dependencies are installed: `pip install -r requirements.txt`
+- Verify you're using the project venv: `./.venv/bin/python -c "import grpc; print(grpc.__version__)"`
 
 ### Peer can't reach chaincode
 - Check firewall rules allowing port 9999

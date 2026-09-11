@@ -78,7 +78,9 @@ class BasicAssetChaincode(Chaincode):
                 return pb.Response(status=ResponseCode.ERROR, message="ReadAsset requires 1 argument")
             asset_id = inputs[0]
             result = await self.read_asset(stub, asset_id)
-            return pb.Response(status=ResponseCode.OK, message=result)
+            if not result:
+                return pb.Response(status=ResponseCode.ERROR, message=f"Asset {asset_id} does not exist")
+            return pb.Response(status=ResponseCode.OK, payload=result)
 
         elif action == "DeleteAsset":
             if len(inputs) < 1:
@@ -89,7 +91,7 @@ class BasicAssetChaincode(Chaincode):
 
         elif action == "GetAllAssets":
             results = await self.get_all_assets(stub)
-            return pb.Response(status=ResponseCode.OK, message=results)
+            return pb.Response(status=ResponseCode.OK, payload=results.encode())
 
         else:
             return pb.Response(status=ResponseCode.ERROR, message=f"Unknown function: {action}")

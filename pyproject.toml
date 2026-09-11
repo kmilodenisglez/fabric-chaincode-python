@@ -10,7 +10,7 @@ readme = "README.md"
 license = {text = "Apache License v2.0"}
 requires-python = ">=3.10"
 dependencies = [
-    "grpcio>=1.51.3",
+    "grpcio>=1.83.1",
     "grpclib>=0.4.3",
     "protobuf>=7.35.1"
 ]

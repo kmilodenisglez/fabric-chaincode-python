@@ -61,7 +61,7 @@ class AssetTransferSBEChaincode(Chaincode):
                 if len(args) != 1:
                     return self._error("AssetExists requires 1 argument: assetId")
                 exists = await self.asset_exists(stub, args[0])
-                return pb.Response(status=ResponseCode.OK, message=str(exists).lower())
+                return pb.Response(status=ResponseCode.OK, payload=str(exists).lower().encode())
 
             if fn == "InitLedger":
                 return await self.init_ledger(stub)
@@ -100,7 +100,7 @@ class AssetTransferSBEChaincode(Chaincode):
         asset_bytes = await stub.get_state(asset_id)
         if not asset_bytes:
             return self._error(f"The asset {asset_id} does not exist")
-        return pb.Response(status=ResponseCode.OK, message=asset_bytes.decode())
+        return pb.Response(status=ResponseCode.OK, payload=asset_bytes)
 
     async def update_asset(self, stub: ChaincodeStubInterface, asset_id: str, new_value: str) -> pb.Response:
         asset_data = await stub.get_state(asset_id)
