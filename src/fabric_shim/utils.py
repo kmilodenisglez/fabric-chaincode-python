@@ -1,5 +1,4 @@
 # Auxiliary tools
-from fabric_protos_python.peer import chaincode_shim_pb2 as ccshim_pb2
 
 
 def enum_type(*sequential, **named) -> type:
@@ -18,7 +17,6 @@ def enum_type(*sequential, **named) -> type:
         named: Collects all the keyword arguments in a dictionary.
 
     """
-    print(sequential, ": ", named)
     enums = dict(zip(sequential, range(len(sequential))), **named)
     return type('Enum', (), enums)
 

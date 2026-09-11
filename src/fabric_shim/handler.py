@@ -37,9 +37,6 @@ MAX_UNICODE_RUNE_VALUE = '\u0010FFFF'  # U+10FFFF - maximum (and unallocated) co
 COMPOSITEKEY_NS = '\x00'
 EMPTY_KEY_SUBSTITUTE = '\x01'
 
-STATE = STATES.CREATED
-
-
 class Handler:
     def __init__(self, cc_id: str, cc: Chaincode) -> None:
         self.chaincode_id = cc_pb2.ChaincodeID()
@@ -47,6 +44,24 @@ class Handler:
         self.chaincode = cc
         self.msg_queue_handler = None
         self.context = None
+        self.state = STATES.CREATED
+        self._pending_tasks = set()
+
+    def _track_task(self, coro):
+        """Schedule message handling while surfacing task failures in logs."""
+        task = asyncio.create_task(coro)
+        self._pending_tasks.add(task)
+
+        def _done_callback(done_task):
+            self._pending_tasks.discard(done_task)
+            try:
+                exc = done_task.exception()
+            except asyncio.CancelledError:
+                return
+            if exc is not None:
+                LOGGER.exception('Unhandled exception while processing peer message', exc_info=exc)
+
+        task.add_done_callback(_done_callback)
 
     async def handle_stub_interaction(self, msg, action="Invoke"):
         """handle_message calls the Init | Invoke function of the associated chaincode."""
@@ -118,65 +133,51 @@ class Handler:
             await self.handle_stub_interaction(msg, "Invoke")
             return
         else:
-            self.context.write(new_error_msg(msg, STATE))
+            await self.context.write(new_error_msg(msg, self.state))
 
-    def handle_message_established(self, msg):
+    async def handle_message_established(self, msg):
         """
         handle_message_established handles messages received from the peer when the handler is in the "established" state.
         """
-        global STATE
         if msg.type != ccshim_pb2.ChaincodeMessage.READY:
             LOGGER.error(f'Chaincode is in "established" state, can only process messages of type "ready", '
                          f'but received "{msg.type}"')
-            # write is an async coroutine on the context
-            try:
-                return asyncio.create_task(self.context.write(new_error_msg(msg, STATE)))
-            except Exception:
-                return
+            await self.context.write(new_error_msg(msg, self.state))
         else:
             LOGGER.info('Successfully established communication with peer node. State transferred to "ready"')
-            STATE = STATES.READY
+            self.state = STATES.READY
 
-    def handle_message_created(self, msg):
+    async def handle_message_created(self, msg):
         """handle_message_created handles messages received from the peer when the handler is in the "created" state."""
-        global STATE
         if msg.type != ccshim_pb2.ChaincodeMessage.REGISTERED:
             LOGGER.error(f'Chaincode is in "created" state, can only process messages of type "registered", '
                          f'but received "{msg.type}"')
-            try:
-                return asyncio.create_task(self.context.write(new_error_msg(msg, STATE)))
-            except Exception:
-                return
+            await self.context.write(new_error_msg(msg, self.state))
         else:
             LOGGER.info('Successfully registered with peer node. State transferred to "established"')
-            STATE = STATES.ESTABLISHED
+            self.state = STATES.ESTABLISHED
 
     async def handle_message(self, msg: ccshim_pb2.ChaincodeMessage):
         """handle_message message handles loop for shim side of chaincode/peer stream."""
         LOGGER.warning('-->> Look out!')
-        global STATE
 
         # TODO: ?
         if msg.type == ccshim_pb2.ChaincodeMessage.KEEPALIVE:
             LOGGER.info('-| KEEPALIVE')
             return
 
-        if STATE == STATES.READY:
+        if self.state == STATES.READY:
             await self.handle_message_ready(msg)
-        elif STATE == STATES.ESTABLISHED:
-            self.handle_message_established(msg)
-        elif STATE == STATES.CREATED:
-            self.handle_message_created(msg)
+        elif self.state == STATES.ESTABLISHED:
+            await self.handle_message_established(msg)
+        elif self.state == STATES.CREATED:
+            await self.handle_message_created(msg)
         else:
-            try:
-                asyncio.create_task(self.context.write(new_error_msg(msg, STATE)))
-            except Exception:
-                LOGGER.exception('Failed to write error message to context')
+            await self.context.write(new_error_msg(msg, self.state))
 
     async def chat_with_peer(self, stream: AsyncIterable[ccshim_pb2.ChaincodeMessage], context: grpc.aio.ServicerContext):
         """chat stream for peer-chaincode interactions post connection"""
-        global STATE
-        STATE = STATES.CREATED
+        self.state = STATES.CREATED
 
         self.context = context
         self.msg_queue_handler = MsgQueueHandler(self)
@@ -197,12 +198,17 @@ class Handler:
                 return ccshim_pb2.ChaincodeMessage(
                     type=ccshim_pb2.ChaincodeMessage.ERROR, payload=err_str.encode(encoding='utf-8'))
             else:
-                asyncio.create_task(self.handle_message(receive_message))
+                # Keep handling asynchronous so the stream can continue receiving
+                # response frames needed by in-flight request futures.
+                self._track_task(self.handle_message(receive_message))
 
                 LOGGER.info(f'->>>>  proposal  {receive_message.proposal}')
                 LOGGER.info(f'->>>>  payload  {receive_message.payload}')
                 LOGGER.info(f'->>>>  channel ID  {receive_message.channel_id}')
                 LOGGER.info(f'->>>>  Tx ID  {receive_message.txid}')
+
+        if self._pending_tasks:
+            await asyncio.gather(*self._pending_tasks, return_exceptions=True)
 
     async def handle_get_state(self, collection, key, channel_id, tx_id):
         msg_pb = ccshim_pb2.GetState()
