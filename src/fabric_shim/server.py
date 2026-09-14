@@ -13,8 +13,8 @@ import queue
 from src.fabric_shim.handler import Handler
 from src.fabric_shim.interfaces import Chaincode
 from src.fabric_shim.logging import LOGGER
-from fabric_protos_python.peer import chaincode_shim_pb2_grpc as ccshim_grpc_pb2
-from fabric_protos_python.peer import chaincode_shim_pb2 as ccshim_pb2
+from fabric_protos.peer import chaincode_shim_pb2_grpc as ccshim_grpc_pb2
+from fabric_protos.peer import chaincode_shim_pb2 as ccshim_pb2
 
 # Coroutines to be invoked when the event loop is shutting down.
 _cleanup_coroutines = []

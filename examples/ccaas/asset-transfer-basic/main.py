@@ -27,7 +27,7 @@ if str(REPO_ROOT) not in sys.path:
 from src.fabric_shim.interfaces import Chaincode, ChaincodeStubInterface
 from src.fabric_shim.server import start
 from src.fabric_shim.response import ResponseCode
-from fabric_protos_python.peer import proposal_response_pb2 as pb
+from fabric_protos.peer import proposal_response_pb2 as pb
 
 
 class Asset:

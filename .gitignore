@@ -149,8 +149,8 @@ dmypy.json
 *.sh text eol=lf
 
 # Generated protobuf/python bindings (src/protos is still ignored)
-# If you want to commit generated bindings at top-level, do not ignore `fabric_protos_python/` or `protos/`.
-# (We will generate into `fabric_protos_python/` and track it in git.)
+# Optional local generation can target `fabric_protos/` for debugging,
+# but runtime dependencies should come from official `hyperledger/fabric-protos` bindings.
 
 # Secrets and certificates
 *.pem

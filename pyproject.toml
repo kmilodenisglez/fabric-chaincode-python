@@ -10,9 +10,9 @@ readme = "README.md"
 license = {text = "Apache License v2.0"}
 requires-python = ">=3.10"
 dependencies = [
-    "grpcio>=1.83.1",
+    "grpcio>=1.83.1,<2.0.0",
     "grpclib>=0.4.3",
-    "protobuf>=7.35.1"
+    "protobuf>=5.27.0,<6.0.0"
 ]
 keywords = ["Hyperledger", "Fabric", "Chaincode", "Python"]
 

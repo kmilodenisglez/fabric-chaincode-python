@@ -7,11 +7,11 @@ from src.fabric_shim.utils import (
     MIN_UNICODE_RUNE_VALUE,
     validate_composite_key_attribute,
 )
-from fabric_protos_python.peer import chaincode_pb2 as pb
-from fabric_protos_python.common import common_pb2 as cm_pb
-from fabric_protos_python.peer import proposal_pb2 as pr_pb
-from fabric_protos_python.msp import identities_pb2 as id_pb
-from fabric_protos_python.peer import chaincode_event_pb2 as e_pb
+from fabric_protos.peer import chaincode_pb2 as pb
+from fabric_protos.common import common_pb2 as cm_pb
+from fabric_protos.peer import proposal_pb2 as pr_pb
+from fabric_protos.msp import identities_pb2 as id_pb
+from fabric_protos.peer import chaincode_event_pb2 as e_pb
 from collections.abc import Sequence
 from src.fabric_shim.logging import LOGGER
 
