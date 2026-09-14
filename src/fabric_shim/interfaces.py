@@ -4,7 +4,7 @@
 
 from abc import ABC, abstractmethod
 
-from fabric_protos_python.peer import proposal_response_pb2 as pb
+from fabric_protos.peer import proposal_response_pb2 as pb
 
 
 class ChaincodeStubInterface(ABC):

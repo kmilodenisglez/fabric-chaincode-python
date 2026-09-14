@@ -1,8 +1,8 @@
 # Copyright the Institute of Cryptography, Faculty of Mathematics and Computer Science at University of Havana
 # contributors. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
-from fabric_protos_python.peer import chaincode_shim_pb2 as ccshim_pb2
-from fabric_protos_python.peer import proposal_response_pb2 as pb
+from fabric_protos.peer import chaincode_shim_pb2 as ccshim_pb2
+from fabric_protos.peer import proposal_response_pb2 as pb
 
 
 class ResponseCode:

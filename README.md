@@ -12,8 +12,9 @@ Requirements
 - Python 3.10+ (3.11 recommended)
 - See `requirements.txt` for runtime dependencies. Key packages:
 	- `grpcio==1.83.1`
-	- `protobuf>=7.35.1`
+	- `protobuf>=5.27.0,<6.0.0`
 	- `grpclib==0.4.3`
+	- `hyperledger-fabric-protos` (installed via `scripts/install_fabric_protos.sh`)
 
 Quick start (development)
 -------------------------
@@ -26,6 +27,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
+PYTHON_BIN=python ./scripts/install_fabric_protos.sh
 ```
 
 Run tests:
@@ -46,14 +48,25 @@ python -m build --wheel --no-isolation
 
 Protobuf bindings
 -----------------
-This repository contains generated Python protobuf bindings for Hyperledger
-Fabric under the `fabric_protos_python/` package. The project also includes a
-`scripts/gen_protos.sh` helper to regenerate bindings from the `fabric-protos`
-source (recommended to use a pinned tag/submodule for reproducible results).
+This repository consumes the official Python bindings published from
+`hyperledger/fabric-protos`:
 
-If you regenerate protos in CI or locally, ensure the `protobuf` runtime used
-to generate the files is compatible with the installed `protobuf` package
-(see `requirements.txt`).
+- Package name: `hyperledger-fabric-protos`
+- Import namespace: `fabric_protos`
+
+Bindings are installed from official `hyperledger/fabric-protos` sources by
+`scripts/install_fabric_protos.sh`, with validation that required generated
+modules are present.
+
+Install or refresh official bindings with:
+
+```bash
+PYTHON_BIN=python ./scripts/install_fabric_protos.sh
+```
+
+No vendored protobuf runtime package is required in this repository.
+If you need to regenerate bindings locally for debugging, use
+`scripts/gen_protos.sh` and keep generated/runtime versions compatible.
 
 Running a chaincode service (example)
 ------------------------------------
@@ -67,7 +80,7 @@ export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 Then start the example service (if `main.py` or an example is present):
 
 ```bash
-python main.py
+./.venv/bin/python examples/ccaas/asset-transfer-basic/main.py
 ```
 
 Contributing

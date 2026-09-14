@@ -7,8 +7,8 @@ set -euo pipefail
 
 PROTO_RELEASE="v2.5.0"
 # Default output directory (top-level package) so imports like
-# `from fabric_protos_python.peer import chaincode_shim_pb2` work.
-OUT_DIR="${OUT_DIR:-$PWD/fabric_protos_python}"
+# `from fabric_protos.peer import chaincode_shim_pb2` work.
+OUT_DIR="${OUT_DIR:-$PWD/fabric_protos}"
 
 # Allow overriding the source proto path (useful for local copies or CI)
 PROTO_SRC="${PROTO_SRC:-protos/fabric-protos}"
@@ -32,5 +32,7 @@ python3 -m grpc_tools.protoc \
         --python_out="$OUT_DIR" \
         --grpc_python_out="$OUT_DIR" \
         $(find "$SRC_DIR" -name "*.proto" | tr '\n' ' ')
+
+python3 "$PWD/scripts/fix_proto_imports.py"
 
 echo "Protos generated in $OUT_DIR"

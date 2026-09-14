@@ -40,27 +40,22 @@ cd /path/to/fabric-chaincode-python
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
+PYTHON_BIN=python ./scripts/install_fabric_protos.sh
 ```
 
-### 2. Install Example Dependencies
+### 2. Run the Chaincode Server
 
 ```bash
-cd examples/ccaas/asset-transfer-sbe
-pip install -r requirements.txt
-```
-
-### 3. Run the Chaincode Server
-
-```bash
+cd /path/to/fabric-chaincode-python/examples/ccaas/asset-transfer-sbe
 export CHAINCODE_ID=asset_transfer_sbe_1:<package_hash>
 export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 
-python main.py
+../../../.venv/bin/python main.py
 ```
 
 The chaincode server will start and wait for connections from a Fabric peer.
 
-### 4. Invoke Chaincode Functions
+### 3. Invoke Chaincode Functions
 
 **Create asset:**
 ```bash

@@ -16,7 +16,7 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from fabric_protos_python.peer import proposal_response_pb2 as pb
+from fabric_protos.peer import proposal_response_pb2 as pb
 from src.fabric_shim.interfaces import Chaincode, ChaincodeStubInterface
 from src.fabric_shim.response import ResponseCode
 from src.fabric_shim.server import start
