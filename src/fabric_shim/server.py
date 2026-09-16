@@ -1,11 +1,8 @@
-# Copyright the Institute of Cryptography, Faculty of Mathematics and Computer Science at University of Havana
-# contributors. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
 import asyncio
 import logging
 import os
 
-from typing import AsyncIterable, Iterable, Type
+from typing import AsyncIterable, Type
 
 import grpc
 import queue

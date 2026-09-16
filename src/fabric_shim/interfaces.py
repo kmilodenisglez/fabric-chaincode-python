@@ -1,7 +1,3 @@
-# Copyright the Institute of Cryptography, Faculty of Mathematics and Computer Science at University of Havana
-# contributors. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
 from abc import ABC, abstractmethod
 
 from fabric_protos.peer import proposal_response_pb2 as pb
