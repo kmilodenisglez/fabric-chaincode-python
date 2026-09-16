@@ -40,7 +40,6 @@ cd /path/to/fabric-chaincode-python
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-PYTHON_BIN=python ./scripts/install_fabric_protos.sh
 ```
 
 ### 2. Run the Chaincode Server

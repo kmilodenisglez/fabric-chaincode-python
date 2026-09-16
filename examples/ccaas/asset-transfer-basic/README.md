@@ -28,7 +28,6 @@ cd /path/to/fabric-chaincode-python
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-PYTHON_BIN=python ./scripts/install_fabric_protos.sh
 ```
 
 ### 2. Package the Chaincode
@@ -187,7 +186,7 @@ Tells Fabric that this is a CCAAS package:
 ### Server won't start
 - Ensure `CHAINCODE_ID` matches the package-id from `peer lifecycle chaincode install`
 - Check that `connection.json` address is accessible from the peer
-- Verify dependencies are installed: `pip install -r requirements.txt && PYTHON_BIN=python ./scripts/install_fabric_protos.sh`
+- Verify dependencies are installed: `pip install -r requirements.txt`
 - Verify you're using the project venv: `./.venv/bin/python -c "import grpc; print(grpc.__version__)"`
 - Verify Fabric protobuf bindings are importable: `./.venv/bin/python -c "from fabric_protos.peer import chaincode_shim_pb2"`
 

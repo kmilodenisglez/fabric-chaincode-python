@@ -28,6 +28,14 @@ git config --global user.name "Your Name"
 git config --global user.email "you@example.com"
 ```
 
+Protobuf bindings
+--------------------
+
+Bindings come from PyPI (`hyperledger-fabric-protos`) via `requirements.txt` - no extra steps needed.
+
+If you need to test against unreleased `fabric-protos` changes, see `PROTOS.md` (`scripts/install_fabric_protos.sh` and `scripts/gen_protos.sh`).
+
+
 Licensing
 ---------
 

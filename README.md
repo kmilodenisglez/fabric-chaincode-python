@@ -10,11 +10,7 @@ Status
 Requirements
 ------------
 - Python 3.10+ (3.11 recommended)
-- See `requirements.txt` for runtime dependencies. Key packages:
-	- `grpcio==1.83.1`
-	- `protobuf>=5.27.0,<6.0.0`
-	- `grpclib==0.4.3`
-	- `hyperledger-fabric-protos` (installed via `scripts/install_fabric_protos.sh`)
+- See `requirements.txt` for runtime dependencies
 
 Quick start (development)
 -------------------------
@@ -27,7 +23,6 @@ python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -r requirements.txt
-PYTHON_BIN=python ./scripts/install_fabric_protos.sh
 ```
 
 Run tests:
@@ -48,21 +43,13 @@ python -m build --wheel --no-isolation
 
 Protobuf bindings
 -----------------
-This repository consumes the official Python bindings published from
+This repository consumes the official Python bindings published to PYPI from
 `hyperledger/fabric-protos`:
 
 - Package name: `hyperledger-fabric-protos`
 - Import namespace: `fabric_protos`
 
-Bindings are installed from official `hyperledger/fabric-protos` sources by
-`scripts/install_fabric_protos.sh`, with validation that required generated
-modules are present.
-
-Install or refresh official bindings with:
-
-```bash
-PYTHON_BIN=python ./scripts/install_fabric_protos.sh
-```
+They are installed as a regular dependency via requirements.txt. For custom bindings (local checkout, specific upstream commit) see PROTOS.md.
 
 No vendored protobuf runtime package is required in this repository.
 If you need to regenerate bindings locally for debugging, use
