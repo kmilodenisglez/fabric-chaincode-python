@@ -1,15 +1,3 @@
-# handler.py
-
-# Copyright the Institute of Cryptography, Faculty of Mathematics and Computer Science at University of Havana
-# contributors. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
-
-# ChaincodeSupportClient Class
-
-# The main API list of ChaincodeSupportClient is as follows:
-#
-#      chat_with_peer(): Starts a two-way communication flow with the peer node
-
 import datetime
 from typing import AsyncIterable
 import asyncio

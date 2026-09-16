@@ -1,6 +1,3 @@
-# Copyright the Institute of Cryptography, Faculty of Mathematics and Computer Science at University of Havana
-# contributors. All rights reserved.
-# SPDX-License-Identifier: Apache-2.0
 from src.fabric_shim.interfaces import ChaincodeStubInterface
 from src.fabric_shim.utils import (
     COMPOSITEKEY_NS,

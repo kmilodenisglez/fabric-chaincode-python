@@ -1,5 +1,4 @@
 import asyncio
-import json
 from src.fabric_shim.logging import LOGGER
 
 
