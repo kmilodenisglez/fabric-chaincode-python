@@ -58,11 +58,6 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt pytest pytest-asyncio
 
-      - name: Install official Fabric protobuf bindings
-        run: |
-          chmod +x scripts/install_fabric_protos.sh
-          PYTHON_BIN=python ./scripts/install_fabric_protos.sh
-
       - name: Run tests
         run: |
           python -m pytest -q
