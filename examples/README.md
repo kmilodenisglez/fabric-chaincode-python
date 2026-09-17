@@ -1,67 +1,73 @@
 # Examples
 
-This directory contains example implementations of Hyperledger Fabric Python chaincodes.
+This directory contains example implementations of Hyperledger Fabric
+Python chaincodes.  **All examples are CCAAS** (Chaincode-as-a-Service) —
+the chaincode runs as a long-lived gRPC server that the Fabric peer
+connects to.
 
-## Available Examples
+## Layout
 
-### [ccaas/asset-transfer-basic](./ccaas/asset-transfer-basic/)
+```
+examples/
+├── README.md                       # This file
+├── STRUCTURE.md                    # Explanation of the layout & conventions
+└── ccaas/                          # All CCAAS examples
+    ├── README.md                   # CCAAS overview
+    ├── fabric-shim/                # Low-level fabric_shim API examples
+    │   ├── README.md
+    │   ├── asset-transfer-basic/  # Asset CRUD (manual dispatch)
+    │   └── asset-transfer-sbe/     # SBE-style transfer (manual dispatch)
+    └── fabric-contract-api/        # High-level fabric_contract_api examples
+        ├── README.md
+        ├── asset-transfer-basic/   # Asset CRUD (auto-dispatch + metadata)
+        └── asset-transfer-sbe/     # SBE-style transfer (auto-dispatch + metadata)
+```
 
-A complete, ready-to-run example of a Python chaincode deployed as a **Chaincode-as-a-Service (CCAAS)**.
+## Pick your API layer
 
-**Features:**
-- Asset management (create, read, update, delete)
-- Ledger initialization with sample data
-- Full end-to-end setup instructions
-- Docker deployment support
-- Production-ready error handling
+| Layer                    | Use when you want …                                              | Package                  |
+| ------------------------ | ---------------------------------------------------------------- | ------------------------ |
+| `ccaas/fabric-shim/`     | Fine-grained control, manual dispatch, zero reflection          | `src.fabric_shim`        |
+| `ccaas/fabric-contract-api/` | Auto-dispatch, type-annotated args, auto-generated metadata | `src.fabric_contract_api` |
 
-**Quick Links:**
-- [README](./ccaas/asset-transfer-basic/README.md) - Detailed setup and usage guide
-- [main.py](./ccaas/asset-transfer-basic/main.py) - Chaincode implementation
-- [Dockerfile](./ccaas/asset-transfer-basic/Dockerfile) - Docker build configuration
+Both layers expose the **same scenarios** (asset-transfer-basic and
+asset-transfer-sbe) so you can compare implementations side-by-side.
 
-### [ccaas/asset-transfer-sbe](./ccaas/asset-transfer-sbe/)
+## Pick a scenario
 
-State-based-endorsement style asset transfer sample aligned with Fabric naming and function set.
+| Scenario                  | What it shows                                                 |
+| ------------------------- | ------------------------------------------------------------- |
+| `asset-transfer-basic/`   | Asset CRUD: InitLedger, CreateAsset, ReadAsset, UpdateAsset, DeleteAsset, GetAllAssets |
+| `asset-transfer-sbe/`     | SBE-style: the above plus `TransferAsset` and `AssetExists`  |
 
-**Quick Links:**
-- [README](./ccaas/asset-transfer-sbe/README.md)
-- [main.py](./ccaas/asset-transfer-sbe/main.py)
-- [Dockerfile](./ccaas/asset-transfer-sbe/Dockerfile)
+## Quick start
+
+1. **Choose**: pick one of `ccaas/fabric-shim/<scenario>/` or
+   `ccaas/fabric-contract-api/<scenario>/`.
+2. **Read**: each example has its own `README.md` with the full
+   packaging / install / approve / commit / run / invoke / query
+   sequence.
+3. **Run**: from the repository root,
+   ```bash
+   pip install -r requirements.txt
+   export CHAINCODE_ID="<package_id>"
+   export CHAINCODE_SERVER_ADDRESS="127.0.0.1:9999"
+   python examples/ccaas/<layer>/<scenario>/main.py
+   ```
 
 ## What is CCAAS?
 
-**Chaincode-as-a-Service (CCAAS)** is a deployment model for Hyperledger Fabric chaincodes where:
-- The chaincode runs as an independent service/process
-- The peer connects to it via gRPC
-- You have full control over the runtime environment
-- Perfect for integrating with external systems, databases, or microservices
+**Chaincode-as-a-Service (CCAAS)** is a deployment model for Hyperledger
+Fabric chaincodes where:
 
-## Getting Started
+- The chaincode runs as an independent service/process.
+- The peer connects to it via gRPC.
+- You have full control over the runtime environment.
+- Perfect for integrating with external systems, databases, or
+  microservices.
 
-1. **Choose an Example:** Start with `ccaas/asset-transfer-basic` for a complete working example
-2. **Follow Setup Instructions:** Each example has a README with step-by-step instructions
-3. **Test on Local Network:** Use Fabric's `test-network-nano-bash` for testing
-4. **Adapt for Your Use Case:** Modify the chaincode logic for your specific needs
-
-## Common Tasks
-
-### Create a New Example
-1. Create a new folder under `examples/`
-2. Copy the structure from `ccaas/asset-transfer-basic/`
-3. Modify `main.py` for your chaincode logic
-4. Update README with your specific instructions
-
-### Deploy to Production
-- Use Docker containers for consistent deployment
-- Configure TLS in `connection.json` (`"tls_required": true`)
-- Set appropriate network policies and firewall rules
-- Use a process manager (systemd, supervisor, etc.) to keep the service running
-
-### Integrate with External Systems
-- The chaincode can make HTTP requests, database calls, etc.
-- Use the ledger for immutable records
-- Return results via the Response object
+See the [official Fabric docs](https://hyperledger-fabric.readthedocs.io/en/latest/cc_service.html)
+for more details on the CCAAS architecture.
 
 ## Requirements
 
@@ -72,14 +78,18 @@ State-based-endorsement style asset transfer sample aligned with Fabric naming a
 
 ## Related Documentation
 
-- [Fabric Python Chaincode API](../src/fabric_shim/)
+- [`fabric_shim` package](../src/fabric_shim/) — low-level chaincode shim.
+- [`fabric_contract_api` package](../src/fabric_contract_api/) — high-level
+  contract API (Python port of `fabric-contract-api-go`).
 - [Hyperledger Fabric Official Docs](https://hyperledger-fabric.readthedocs.io/)
 - [CCAAS Architecture](https://hyperledger-fabric.readthedocs.io/en/latest/cc_service.html)
 
 ## Contributing
 
-If you create new examples or improvements, please consider contributing back to the repository. Follow the same structure and include comprehensive documentation.
+If you create a new example, follow the same structure:
 
----
-
-**Note:** Examples are designed to demonstrate concepts and work with Fabric v2.5+. Always test thoroughly before deploying to production.
+1. Create a new folder under `ccaas/<layer>/<scenario>/`.
+2. Include at least `main.py`, `README.md`, `connection.json`,
+   `metadata.json`, `requirements.txt`, `Dockerfile`.
+3. Update `ccaas/<layer>/README.md` to reference the new example.
+4. Add a row to the tables in this README and in `STRUCTURE.md`.

@@ -236,7 +236,93 @@ class Handler:
             channel_id=channel_id
         )
         return await self.__ask_peer_and_listen(msg, 'DeleteState')
-    
+
+    async def handle_get_state_by_range(self, collection, start_key, end_key,
+                                          channel_id, tx_id, metadata=None):
+        """Send a GetStateByRange request to the peer.
+
+        ``metadata`` (if present) is a serialised :class:`QueryMetadata`
+        message — used for pagination.
+        """
+        msg_pb = ccshim_pb2.GetStateByRange()
+        msg_pb.start_key = start_key or ""
+        msg_pb.end_key = end_key or ""
+        msg_pb.collection = collection
+        if metadata is not None:
+            msg_pb.metadata = metadata
+        msg = ccshim_pb2.ChaincodeMessage(
+            type=ccshim_pb2.ChaincodeMessage.GET_STATE_BY_RANGE,
+            payload=msg_pb.SerializeToString(),
+            txid=tx_id,
+            channel_id=channel_id,
+        )
+        return await self.__ask_peer_and_listen(msg, 'GetStateByRange')
+
+    async def handle_get_query_result(self, collection, query, channel_id, tx_id,
+                                       metadata=None):
+        """Send a GetQueryResult (CouchDB rich query) request to the peer."""
+        msg_pb = ccshim_pb2.GetQueryResult()
+        msg_pb.query = query
+        msg_pb.collection = collection
+        if metadata is not None:
+            msg_pb.metadata = metadata
+        msg = ccshim_pb2.ChaincodeMessage(
+            type=ccshim_pb2.ChaincodeMessage.GET_QUERY_RESULT,
+            payload=msg_pb.SerializeToString(),
+            txid=tx_id,
+            channel_id=channel_id,
+        )
+        return await self.__ask_peer_and_listen(msg, 'GetQueryResult')
+
+    async def handle_get_history_for_key(self, key, channel_id, tx_id):
+        """Send a GetHistoryForKey request to the peer."""
+        msg_pb = ccshim_pb2.GetHistoryForKey()
+        msg_pb.key = key
+        msg = ccshim_pb2.ChaincodeMessage(
+            type=ccshim_pb2.ChaincodeMessage.GET_HISTORY_FOR_KEY,
+            payload=msg_pb.SerializeToString(),
+            txid=tx_id,
+            channel_id=channel_id,
+        )
+        return await self.__ask_peer_and_listen(msg, 'GetHistoryForKey')
+
+    async def handle_query_state_next(self, query_id, channel_id, tx_id):
+        """Fetch the next page of an in-flight paged query."""
+        msg_pb = ccshim_pb2.QueryStateNext()
+        msg_pb.id = query_id
+        msg = ccshim_pb2.ChaincodeMessage(
+            type=ccshim_pb2.ChaincodeMessage.QUERY_STATE_NEXT,
+            payload=msg_pb.SerializeToString(),
+            txid=tx_id,
+            channel_id=channel_id,
+        )
+        return await self.__ask_peer_and_listen(msg, 'QueryStateNext')
+
+    async def handle_query_state_close(self, query_id, channel_id, tx_id):
+        """Close an in-flight paged query."""
+        msg_pb = ccshim_pb2.QueryStateClose()
+        msg_pb.id = query_id
+        msg = ccshim_pb2.ChaincodeMessage(
+            type=ccshim_pb2.ChaincodeMessage.QUERY_STATE_CLOSE,
+            payload=msg_pb.SerializeToString(),
+            txid=tx_id,
+            channel_id=channel_id,
+        )
+        return await self.__ask_peer_and_listen(msg, 'QueryStateClose')
+
+    async def handle_invoke_chaincode(self, chaincode_name, args, channel_id, tx_id):
+        """Invoke another chaincode by name."""
+        ci = cc_pb2.ChaincodeInput()
+        for a in args:
+            ci.args.append(a.encode() if isinstance(a, str) else a)
+        msg = ccshim_pb2.ChaincodeMessage(
+            type=ccshim_pb2.ChaincodeMessage.INVOKE_CHAINCODE,
+            payload=ci.SerializeToString(),
+            txid=tx_id,
+            channel_id=channel_id,
+        )
+        return await self.__ask_peer_and_listen(msg, 'InvokeChaincode')
+
     async def __ask_peer_and_listen(self, msg, action):
         loop = asyncio.get_running_loop()
         fut = loop.create_future()

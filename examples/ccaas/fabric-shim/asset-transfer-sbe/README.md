@@ -45,7 +45,7 @@ pip install -r requirements.txt
 ### 2. Run the Chaincode Server
 
 ```bash
-cd /path/to/fabric-chaincode-python/examples/ccaas/asset-transfer-sbe
+cd /path/to/fabric-chaincode-python/examples/ccaas/fabric-shim/asset-transfer-sbe
 export CHAINCODE_ID=asset_transfer_sbe_1:<package_hash>
 export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 
@@ -76,7 +76,7 @@ peer chaincode invoke -C mychannel -n asset-transfer-sbe -c '{"Args":["TransferA
 ### Build the Docker Image
 
 ```bash
-docker build -f examples/ccaas/asset-transfer-sbe/Dockerfile -t asset-transfer-sbe:latest .
+docker build -f examples/ccaas/fabric-shim/asset-transfer-sbe/Dockerfile -t asset-transfer-sbe:latest .
 ```
 
 ### Run in Docker
