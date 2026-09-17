@@ -16,12 +16,14 @@ or directly::
 
 from __future__ import annotations
 
+import asyncio
 import dataclasses
+import inspect
 import json
 import os
 import sys
 import unittest
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 # Allow running tests directly from the repository root.
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))

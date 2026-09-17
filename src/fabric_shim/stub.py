@@ -138,6 +138,183 @@ class ChaincodeStub(ChaincodeStubInterface):
         collection = ''
         return await self.client.handle_delete_state(collection, key, self.channel_id, self.tx_id)
 
+    async def get_state_by_range(self, start_key: str, end_key: str):
+        """Returns a range of keys from the ledger.
+
+        Returns an async iterator yielding :class:`KV` records (with
+        ``key`` and ``value`` byte fields).  Both keys may be empty strings
+        to mean "unbounded".
+        """
+        collection = ''
+        from src.fabric_shim.iterators import StateQueryIterator
+        from fabric_protos.peer import chaincode_shim_pb2 as ccshim_pb2
+        from fabric_protos.ledger.queryresult import kv_query_result_pb2 as kv_pb
+
+        raw = await self.client.handle_get_state_by_range(
+            collection, start_key, end_key,
+            self.channel_id, self.tx_id,
+        )
+        return StateQueryIterator(
+            handler=self.client,
+            channel_id=self.channel_id,
+            tx_id=self.tx_id,
+            initial_response=raw,
+            response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+        )
+
+    async def get_state_by_range_with_pagination(self, start_key: str, end_key: str,
+                                                   page_size: int, bookmark: str = ""):
+        """Paginated version of :meth:`get_state_by_range`.
+
+        Returns an async iterator yielding :class:`KV` records.  Use the
+        :meth:`aclose` method of the iterator when you want to stop early.
+        """
+        collection = ''
+        from src.fabric_shim.iterators import StateQueryIterator
+        from fabric_protos.peer import chaincode_shim_pb2 as ccshim_pb2
+        from fabric_protos.ledger.queryresult import kv_query_result_pb2 as kv_pb
+
+        meta = ccshim_pb2.QueryMetadata()
+        meta.pagesize = int(page_size)
+        meta.bookmark = bookmark or ""
+        raw = await self.client.handle_get_state_by_range(
+            collection, start_key, end_key,
+            self.channel_id, self.tx_id, metadata=meta.SerializeToString(),
+        )
+        return StateQueryIterator(
+            handler=self.client,
+            channel_id=self.channel_id,
+            tx_id=self.tx_id,
+            initial_response=raw,
+            response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+        )
+
+    async def get_query_result(self, query: str):
+        """Run a CouchDB rich query against the world state.
+
+        Returns an async iterator yielding :class:`KV` records.
+        """
+        collection = ''
+        from src.fabric_shim.iterators import QueryResultIterator
+        from fabric_protos.peer import chaincode_shim_pb2 as ccshim_pb2
+        from fabric_protos.ledger.queryresult import kv_query_result_pb2 as kv_pb
+
+        raw = await self.client.handle_get_query_result(
+            collection, query, self.channel_id, self.tx_id,
+        )
+        return QueryResultIterator(
+            handler=self.client,
+            channel_id=self.channel_id,
+            tx_id=self.tx_id,
+            initial_response=raw,
+            response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+        )
+
+    async def get_query_result_with_pagination(self, query: str, page_size: int,
+                                                bookmark: str = ""):
+        """Paginated version of :meth:`get_query_result`."""
+        collection = ''
+        from src.fabric_shim.iterators import QueryResultIterator
+        from fabric_protos.peer import chaincode_shim_pb2 as ccshim_pb2
+        from fabric_protos.ledger.queryresult import kv_query_result_pb2 as kv_pb
+
+        meta = ccshim_pb2.QueryMetadata()
+        meta.pagesize = int(page_size)
+        meta.bookmark = bookmark or ""
+        raw = await self.client.handle_get_query_result(
+            collection, query, self.channel_id, self.tx_id,
+            metadata=meta.SerializeToString(),
+        )
+        return QueryResultIterator(
+            handler=self.client,
+            channel_id=self.channel_id,
+            tx_id=self.tx_id,
+            initial_response=raw,
+            response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+        )
+
+    async def get_history_for_key(self, key: str):
+        """Return the history of modifications for *key*.
+
+        Yields :class:`KeyModification` records (``tx_id``, ``value``,
+        ``timestamp``, ``is_delete``).
+        """
+        from src.fabric_shim.iterators import HistoryQueryIterator
+        from fabric_protos.peer import chaincode_shim_pb2 as ccshim_pb2
+        from fabric_protos.ledger.queryresult import kv_query_result_pb2 as kv_pb
+
+        raw = await self.client.handle_get_history_for_key(
+            key, self.channel_id, self.tx_id,
+        )
+        return HistoryQueryIterator(
+            handler=self.client,
+            channel_id=self.channel_id,
+            tx_id=self.tx_id,
+            initial_response=raw,
+            response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
+            parser=lambda qrb: kv_pb.KeyModification.FromString(qrb.result_bytes),
+        )
+
+    async def get_state_by_partial_composite_key(self, object_type: str,
+                                                   attributes):
+        """Range query on the ledger using a partial composite key.
+
+        Builds a composite key prefix from *object_type* and *attributes*
+        and runs a range query from that prefix to the next code point.
+        """
+        full_key = self.create_composite_key(object_type, attributes)
+        # Range from the composite key to the same prefix with the maximum
+        # rune appended — this is the Fabric convention for "prefix" range
+        # queries against composite keys.
+        end_key = full_key + '\U0010FFFF'
+        return await self.get_state_by_range(full_key, end_key)
+
+    async def invoke_chaincode(self, chaincode_name: str, args, channel: str = ""):
+        """Invoke another chaincode by name.
+
+        ``args`` is a list of strings (or bytes).  The return value is the
+        ``Response`` produced by the invoked chaincode.
+        """
+        from fabric_protos.peer import proposal_response_pb2 as pr_pb
+        # If a channel is supplied, build a fully-qualified name.
+        fully_qualified = f"{chaincode_name}/{channel}" if channel else chaincode_name
+        raw = await self.client.handle_invoke_chaincode(
+            fully_qualified, list(args), self.channel_id, self.tx_id,
+        )
+        # raw.payload is a serialised proposal Response
+        return pr_pb.Response.FromString(raw.payload)
+
+    def set_event(self, name: str, payload):
+        """Emit a chaincode event.
+
+        ``payload`` is stored on the stub and serialised into the final
+        ``COMPLETED`` message built by the handler.
+        """
+        if not isinstance(name, str) or not name:
+            raise Exception('event name must be a non-empty string')
+        if isinstance(payload, str):
+            payload = payload.encode()
+        elif payload is None:
+            payload = b''
+        # Lazily initialise the event list on the stub.
+        if not hasattr(self, '_events') or self._events is None:
+            self._events = []
+        from fabric_protos.peer import chaincode_event_pb2 as e_pb
+        evt = e_pb.ChaincodeEvent()
+        evt.chaincode_id = self.chaincode_id_name if hasattr(self, 'chaincode_id_name') else ""
+        evt.tx_id = self.tx_id
+        evt.event_name = name
+        evt.payload = bytes(payload)
+        self._events.append(evt)
+
+    def get_events(self):
+        """Internal: return the list of accumulated events (used by handler)."""
+        return list(getattr(self, '_events', []) or [])
+
     def create_composite_key(self, object_type, attributes):
         """Creates a composite key by combining the objectType string
         and the given `attributes` to form a composite key"""

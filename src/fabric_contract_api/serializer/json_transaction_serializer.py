@@ -224,11 +224,17 @@ class JSONSerializer(TransactionSerializer):
         except Exception:
             return None
 
-        # Build the document to validate.  Structs are validated against their
-        # JSON-decoded form so that $ref to #/components/schemas/... works.
+        # Build the document to validate.  Complex types (lists, dicts,
+        # structs) are validated against their JSON-decoded form so that
+        # $ref to #/components/schemas/... resolves correctly.
         to_validate: Any
         if isinstance(obj, _dt.datetime):
             to_validate = {prop_name: string_value}
+        elif _t.get_origin(typ) in (list, _t.List, tuple, _t.Tuple, dict, _t.Dict):
+            try:
+                to_validate = {prop_name: json.loads(string_value)}
+            except json.JSONDecodeError as exc:
+                return exc
         elif isinstance(typ, type) and typ not in _types.BasicTypes and (
                 dataclasses.is_dataclass(typ) or _is_user_class(typ)):
             try:

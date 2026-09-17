@@ -24,10 +24,14 @@ Typical usage::
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional, Tuple
+import json
+import os
+import re
+from typing import Any, Dict, List, Optional, Tuple, Type
 
 from src.fabric_shim.interfaces import Chaincode, ChaincodeStubInterface
 from src.fabric_shim.response import ResponseCode, success as _shim_success, error as _shim_error
+from src.fabric_shim.logging import LOGGER
 
 from ..internal.contract_function import CallType, ContractFunction
 from ..internal.transaction_handler import (
@@ -42,6 +46,7 @@ from ..metadata import (
     ContractMetadata,
     InfoMetadata,
     TransactionMetadata,
+    get_json_schema,
     read_metadata_file,
     validate_against_schema,
 )
@@ -55,7 +60,9 @@ from .contract import (
 from .system_contract import SystemContract, SystemContractName
 from .transaction_context import (
     ClientIdentity,
-    TransactionContext
+    SettableTransactionContextInterface,
+    TransactionContext,
+    TransactionContextInterface,
 )
 
 
@@ -155,7 +162,7 @@ class ContractChaincode(Chaincode):
         """
         # Local import to avoid a hard dependency cycle when this module is
         # imported eagerly by user code.
-        from src.fabric_shim import start as _shim_start
+        from src.fabric_shim.server import start as _shim_start
 
         _shim_start(
             cc=self,
