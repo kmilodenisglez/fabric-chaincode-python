@@ -88,8 +88,7 @@ class Asset:
 class AssetContract(Contract):
     """Basic asset management contract.
 
-    Mirrors the behaviour of ``BasicAssetChaincode`` in 
-    ``asset-transfer-basic/main.py`` but
+    Mirrors the behaviour of ``BasicAssetChaincode`` in ``asset-transfer-basic/main.py`` but
     exposes its operations as contract transactions so that the
     :class:`ContractChaincode` dispatcher can route Init/Invoke calls
     automatically and so that the contract's metadata is reflected into the
@@ -136,7 +135,7 @@ class AssetContract(Contract):
     # Transactions
     # ------------------------------------------------------------------
 
-    async def init_ledger(self, ctx: TransactionContextInterface) -> None:
+    async def InitLedger(self, ctx: TransactionContextInterface) -> None:
         """Populate the ledger with a set of sample assets.
 
         Called automatically when the chaincode is instantiated with the
@@ -153,7 +152,7 @@ class AssetContract(Contract):
         for asset in samples:
             await self._write_asset(ctx, asset)
 
-    async def create_asset(self, ctx: TransactionContextInterface,
+    async def CreateAsset(self, ctx: TransactionContextInterface,
                              asset: Asset) -> None:
         """Create a new asset on the ledger.
 
@@ -174,7 +173,7 @@ class AssetContract(Contract):
             raise ValueError(f"asset {key} does not exist")
         return asset
 
-    async def update_asset(self, ctx: TransactionContextInterface,
+    async def UpdateAsset(self, ctx: TransactionContextInterface,
                              asset: Asset) -> None:
         """Update an existing asset on the ledger.
 
@@ -187,7 +186,7 @@ class AssetContract(Contract):
             )
         await self._write_asset(ctx, asset)
 
-    async def delete_asset(self, ctx: TransactionContextInterface,
+    async def DeleteAsset(self, ctx: TransactionContextInterface,
                              key: str) -> None:
         """Delete an asset from the ledger."""
         existing = await ctx.get_stub().get_state(key)
@@ -197,7 +196,7 @@ class AssetContract(Contract):
             )
         await ctx.get_stub().delete_state(key)
 
-    async def get_all_assets(self, ctx: TransactionContextInterface
+    async def GetAllAssets(self, ctx: TransactionContextInterface
                                ) -> List[Asset]:
         """Return every asset currently stored in the world state.
 
@@ -232,7 +231,7 @@ class AssetContract(Contract):
         metadata, signalling to clients that they should be invoked via
         ``peer chaincode query`` rather than ``peer chaincode invoke``.
         """
-        return ["ReadAsset", "get_all_assets"]
+        return ["ReadAsset", "GetAllAssets"]
 
 
 # ---------------------------------------------------------------------------

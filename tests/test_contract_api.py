@@ -37,9 +37,27 @@ from src.fabric_contract_api import (  # noqa: E402
 )
 
 
-# ---------------------------------------------------------------------------
-# Mock ChaincodeStub
-# ---------------------------------------------------------------------------
+def _read_response_payload(resp):
+    """Return the bytes of a successful chaincode Response.
+
+    ``peer chaincode query`` reads ``Response.payload`` (the bytes field)
+    and prints it to stdout.  This helper mirrors that behaviour so tests
+    match what clients see.
+    """
+    payload = resp.payload
+    if isinstance(payload, bytes):
+        return payload
+    if isinstance(payload, str):
+        return payload.encode("utf-8")
+    if not payload:
+        # Fall back to ``message`` for backward compat with the old
+        # (buggy) shim that put bytes in ``message``.
+        message = resp.message
+        if isinstance(message, bytes):
+            return message
+        if isinstance(message, str):
+            return message.encode("utf-8")
+    return b""
 
 
 class MockChaincodeStub:
@@ -147,11 +165,7 @@ class ContractApiTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(resp.status, 200, "create_asset should succeed")
         resp = await self._invoke("read_asset", "asset1")
         self.assertEqual(resp.status, 200)
-        message = resp.message
-        if isinstance(message, bytes):
-            body = message.decode("utf-8")
-        else:
-            body = message
+        body = _read_response_payload(resp).decode("utf-8")
         parsed = json.loads(body)
         self.assertEqual(parsed["ID"], "asset1")
         self.assertEqual(parsed["Owner"], "Alice")
@@ -178,11 +192,7 @@ class ContractApiTests(unittest.IsolatedAsyncioTestCase):
     async def test_get_metadata_via_system_contract(self):
         resp = await self._invoke("org.hyperledger.fabric:get_metadata")
         self.assertEqual(resp.status, 200)
-        message = resp.message
-        if isinstance(message, bytes):
-            body = message.decode("utf-8")
-        else:
-            body = message
+        body = _read_response_payload(resp).decode("utf-8")
         metadata = json.loads(body)
         self.assertIn("AssetContract", metadata["contracts"])
         self.assertIn("org.hyperledger.fabric", metadata["contracts"])

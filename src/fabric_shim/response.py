@@ -21,9 +21,28 @@ def new_error_msg(msg, state) -> ccshim_pb2.ChaincodeMessage:
                                        payload=err_str.encode(encoding='utf-8'), txid=msg.txid)
 
 
-def success(payload: bytes):
-    return pb.Response(status=ResponseCode.OK, message=payload)
+def success(payload):
+    """Build a successful Fabric Response.
+
+    Puts *payload* in the ``payload`` (bytes) field of the Response — this
+    is the field that ``peer chaincode query`` / ``invoke`` reads to print
+    the chaincode result.  ``payload`` may be ``bytes``, ``str`` (will be
+    UTF-8 encoded) or ``None`` (treated as an empty payload).
+    """
+    if payload is None:
+        payload = b""
+    if isinstance(payload, str):
+        payload = payload.encode("utf-8")
+    elif isinstance(payload, bytearray):
+        payload = bytes(payload)
+    return pb.Response(status=ResponseCode.OK, payload=payload)
 
 
-def error():
-    return pb.Response(status=ResponseCode.ERROR)
+def error(message: str = ""):
+    """Build an error Fabric Response.
+
+    Puts *message* in the ``message`` (string) field of the Response — this
+    is what ``peer chaincode query`` / ``invoke`` prints to stderr when
+    the chaincode returns an error.
+    """
+    return pb.Response(status=ResponseCode.ERROR, message=message)

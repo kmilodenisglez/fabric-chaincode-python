@@ -27,6 +27,28 @@ from src.fabric_contract_api import (  # noqa: E402
 )
 
 
+def _read_response_payload(resp):
+    """Return the bytes of a successful chaincode Response.
+
+    ``peer chaincode query`` reads ``Response.payload`` (the bytes field)
+    and prints it to stdout.  This helper mirrors that behaviour so tests
+    match what clients see.
+    """
+    payload = resp.payload
+    if isinstance(payload, bytes):
+        return payload
+    if isinstance(payload, str):
+        return payload.encode("utf-8")
+    if not payload:
+        # Fall back to ``message`` for backward compat.
+        message = resp.message
+        if isinstance(message, bytes):
+            return message
+        if isinstance(message, str):
+            return message.encode("utf-8")
+    return b""
+
+
 # ---------------------------------------------------------------------------
 # Mock stub with get_state_by_range support
 # ---------------------------------------------------------------------------
@@ -133,15 +155,13 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
         return await self.cc.invoke(stub)
 
     async def test_init_ledger(self):
-        resp = await self._invoke("init_ledger")
-        self.assertEqual(resp.status, 200, "init_ledger should succeed")
+        resp = await self._invoke("InitLedger")
+        self.assertEqual(resp.status, 200, "InitLedger should succeed")
         # Now check that the assets are present.
-        resp = await self._invoke("get_all_assets")
+        resp = await self._invoke("GetAllAssets")
         self.assertEqual(resp.status, 200)
-        msg = resp.message
-        body = msg.decode("utf-8") if isinstance(msg, bytes) else msg
-        assets = json.loads(body)
-        self.assertEqual(len(assets), 6, "init_ledger should create 6 sample assets")
+        assets = json.loads(_read_response_payload(resp).decode("utf-8"))
+        self.assertEqual(len(assets), 6, "InitLedger should create 6 sample assets")
         self.assertEqual(assets[0]["id"], "asset1")
         self.assertEqual(assets[0]["color"], "blue")
 
@@ -149,73 +169,69 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
         asset = {"id": "asset100", "color": "pink", "size": 7,
                   "owner": "Alice", "appraised_value": 800}
         # Create
-        resp = await self._invoke("create_asset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", json.dumps(asset))
         self.assertEqual(resp.status, 200, "create should succeed")
         # Read
-        resp = await self._invoke("read_asset", "asset100")
+        resp = await self._invoke("ReadAsset", "asset100")
         self.assertEqual(resp.status, 200, "read should succeed")
-        msg = resp.message
-        body = msg.decode("utf-8") if isinstance(msg, bytes) else msg
-        self.assertEqual(json.loads(body), asset)
+        self.assertEqual(json.loads(_read_response_payload(resp).decode("utf-8")), asset)
         # Update
         updated = dict(asset)
         updated["color"] = "green"
-        resp = await self._invoke("update_asset", json.dumps(updated))
+        resp = await self._invoke("UpdateAsset", json.dumps(updated))
         self.assertEqual(resp.status, 200, "update should succeed")
         # Read again to verify
-        resp = await self._invoke("read_asset", "asset100")
-        msg = resp.message
-        body = msg.decode("utf-8") if isinstance(msg, bytes) else msg
-        self.assertEqual(json.loads(body)["color"], "green")
+        resp = await self._invoke("ReadAsset", "asset100")
+        self.assertEqual(
+            json.loads(_read_response_payload(resp).decode("utf-8"))["color"],
+            "green",
+        )
         # Delete
-        resp = await self._invoke("delete_asset", "asset100")
+        resp = await self._invoke("DeleteAsset", "asset100")
         self.assertEqual(resp.status, 200, "delete should succeed")
         # Subsequent read should fail
-        resp = await self._invoke("read_asset", "asset100")
+        resp = await self._invoke("ReadAsset", "asset100")
         self.assertGreaterEqual(resp.status, 400, "read after delete should error")
 
     async def test_create_duplicate(self):
         asset = {"id": "asset200", "color": "white", "size": 3,
                   "owner": "Bob", "appraised_value": 50}
-        resp = await self._invoke("create_asset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", json.dumps(asset))
         self.assertEqual(resp.status, 200, "first create should succeed")
-        resp = await self._invoke("create_asset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", json.dumps(asset))
         self.assertGreaterEqual(resp.status, 400, "duplicate create should error")
 
     async def test_get_all_assets_empty(self):
-        resp = await self._invoke("get_all_assets")
+        resp = await self._invoke("GetAllAssets")
         self.assertEqual(resp.status, 200)
-        msg = resp.message
-        body = msg.decode("utf-8") if isinstance(msg, bytes) else msg
-        self.assertEqual(json.loads(body), [])
+        self.assertEqual(json.loads(_read_response_payload(resp).decode("utf-8")), [])
 
     async def test_namespaced_call(self):
         asset = {"id": "asset300", "color": "gold", "size": 1,
                   "owner": "Carol", "appraised_value": 1000}
-        resp = await self._invoke("AssetContract:create_asset", json.dumps(asset))
+        resp = await self._invoke("AssetContract:CreateAsset", json.dumps(asset))
         self.assertEqual(resp.status, 200)
-        resp = await self._invoke("AssetContract:read_asset", "asset300")
+        resp = await self._invoke("AssetContract:ReadAsset", "asset300")
         self.assertEqual(resp.status, 200)
-        msg = resp.message
-        body = msg.decode("utf-8") if isinstance(msg, bytes) else msg
-        self.assertEqual(json.loads(body)["id"], "asset300")
+        self.assertEqual(
+            json.loads(_read_response_payload(resp).decode("utf-8"))["id"],
+            "asset300",
+        )
 
     async def test_get_metadata(self):
         resp = await self._invoke("org.hyperledger.fabric:get_metadata")
         self.assertEqual(resp.status, 200)
-        msg = resp.message
-        body = msg.decode("utf-8") if isinstance(msg, bytes) else msg
-        metadata = json.loads(body)
+        metadata = json.loads(_read_response_payload(resp).decode("utf-8"))
         self.assertIn("AssetContract", metadata["contracts"])
         asset_meta = metadata["contracts"]["AssetContract"]
         names = {t["name"] for t in asset_meta["transactions"]}
         self.assertEqual(names, {
-            "init_ledger", "create_asset", "read_asset",
-            "update_asset", "delete_asset", "get_all_assets",
+            "InitLedger", "CreateAsset", "ReadAsset",
+            "UpdateAsset", "DeleteAsset", "GetAllAssets",
         })
         # Verify the EVALUATE tags are set correctly.
         for tx in asset_meta["transactions"]:
-            if tx["name"] in ("read_asset", "get_all_assets"):
+            if tx["name"] in ("ReadAsset", "GetAllAssets"):
                 self.assertIn("EVALUATE", tx["tag"])
             else:
                 self.assertIn("SUBMIT", tx["tag"])

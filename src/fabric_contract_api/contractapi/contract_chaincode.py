@@ -261,7 +261,17 @@ class ContractChaincode(Chaincode):
             if err_res is not None:
                 return _shim_error_response(str(err_res))
 
-        payload = success_return.encode("utf-8") if isinstance(success_return, str) else bytes(success_return)
+        # ``success_return`` is whatever the contract function returned
+        # after serializer conversion.  It is typically a JSON string but
+        # may be raw bytes (e.g. for ``bytes`` return types).  Build the
+        # Fabric Response via ``shim.success()`` so the bytes land in the
+        # ``payload`` field — the field ``peer chaincode query`` prints.
+        if isinstance(success_return, (bytes, bytearray)):
+            payload = bytes(success_return)
+        elif success_return is None:
+            payload = b""
+        else:
+            payload = str(success_return).encode("utf-8")
         return _shim_success(payload)
 
     # ------------------------------------------------------------------
@@ -530,11 +540,13 @@ def _get_function_and_parameters(stub: ChaincodeStubInterface) -> Tuple[str, Lis
 def _shim_error_response(msg: str):
     """Build a ``shim.Error()``-equivalent response.
 
-    The existing shim's ``error()`` helper does not accept a message, so we
-    build the protobuf ``Response`` directly here.
+    The Response's ``message`` field is a protobuf ``string`` — the peer
+    prints it to stderr when ``status >= 400``.  We pass the string
+    directly (no UTF-8 encoding) so the peer shows the error message
+    verbatim.
     """
     from fabric_protos.peer import proposal_response_pb2 as pb
-    return pb.Response(status=ResponseCode.ERROR, message=msg.encode("utf-8"))
+    return pb.Response(status=ResponseCode.ERROR, message=str(msg))
 
 
 __all__ = ["ContractChaincode"]
