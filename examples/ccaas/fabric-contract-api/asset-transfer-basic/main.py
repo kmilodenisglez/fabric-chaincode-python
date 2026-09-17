@@ -1,45 +1,45 @@
 #!/usr/bin/env python3
 # SPDX-License-Identifier: Apache-2.0
-"""Basic Fabric Contract-API Example (CCAAS).
+"""Basic Fabric Contract-API Example (CCAAS, fabric_contract_api).
 
-This is the contract-API counterpart of ``asset-transfer-basic/main.py``.  It demonstrates how
-to expose the same asset-management functionality (InitLedger, CreateAsset,
-ReadAsset, UpdateAsset, DeleteAsset, GetAllAssets) using the high-level
-``fabric_contract_api`` package, while still running as a
-Chaincode-as-a-Service (CCAAS) process.
+This is the contract-API counterpart of
+``examples/ccaas/fabric-shim/asset-transfer-basic/main.py``.  It exposes
+the same asset-management transactions (InitLedger, CreateAsset, ReadAsset,
+UpdateAsset, DeleteAsset, GetAllAssets) but uses the high-level
+``fabric_contract_api`` package, which:
+
+* reflects over the public methods of :class:`AssetContract`;
+* builds a JSON metadata document exposing them through the
+  ``org.hyperledger.fabric:get_metadata`` system contract;
+* dispatches incoming Init/Invoke transactions to the appropriate method,
+  converting string arguments to the function's parameter types via the
+  JSON serializer.
 
 Deploy this chaincode as a CCAAS in Fabric by setting the following
 environment variables before launching it:
 
-* ``CHAINCODE_SERVER_ADDRESS``  e.g. ``0.0.0.0:7052``
+* ``CHAINCODE_SERVER_ADDRESS``  e.g. ``0.0.0.0:9999``
 * ``CHAINCODE_ID``             the chaincode ID returned by ``peer lifecycle``
 * (optional TLS) ``CORE_TLS_CLIENT_KEY_PATH``,
   ``CORE_TLS_CLIENT_CERT_PATH``, ``CORE_PEER_TLS_ROOTCERT_FILE``
 
 Then simply run::
 
-    python simple_contract.py
-
-The contract API will:
-  * reflect over the public methods of :class:`AssetContract`;
-  * build a JSON metadata document exposing them through the
-    ``org.hyperledger.fabric:get_metadata`` system contract;
-  * dispatch incoming Init/Invoke transactions to the appropriate method,
-    converting string arguments to the function's parameter types via the
-    JSON serializer.
+    python main.py
 """
 
 from __future__ import annotations
 
 import json
 import sys
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
 # Make sure the repository root is on ``sys.path`` so that the
-# ``src.fabric_*`` packages can be imported when the file is run directly.
-# Walk up the parent chain looking for the directory that contains ``src/``.
+# ``src.fabric_contract_api`` packages can be imported when the file is
+# run directly.  Walk up the parent chain looking for the directory that
+# contains ``src/``.
 _HERE = Path(__file__).resolve().parent
 REPO_ROOT = None
 for parent in [_HERE, *_HERE.parents]:
@@ -47,7 +47,6 @@ for parent in [_HERE, *_HERE.parents]:
         REPO_ROOT = parent
         break
 if REPO_ROOT is None:
-    # Fallback to the legacy assumption from ``main.py`` (3 levels up).
     REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
@@ -88,7 +87,8 @@ class Asset:
 class AssetContract(Contract):
     """Basic asset management contract.
 
-    Mirrors the behaviour of ``BasicAssetChaincode`` in ``asset-transfer-basic/main.py`` but
+    Mirrors the behaviour of ``BasicAssetChaincode`` in
+    ``examples/ccaas/fabric-shim/asset-transfer-basic/main.py`` but
     exposes its operations as contract transactions so that the
     :class:`ContractChaincode` dispatcher can route Init/Invoke calls
     automatically and so that the contract's metadata is reflected into the
@@ -160,9 +160,7 @@ class AssetContract(Contract):
         """
         existing = await ctx.get_stub().get_state(asset.id)
         if existing:
-            raise ValueError(
-                f"asset {asset.id} already exists"
-            )
+            raise ValueError(f"asset {asset.id} already exists")
         await self._write_asset(ctx, asset)
 
     async def ReadAsset(self, ctx: TransactionContextInterface,

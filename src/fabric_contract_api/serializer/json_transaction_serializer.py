@@ -105,8 +105,17 @@ class JSONSerializer(TransactionSerializer):
                     return "", err
             return s, None
 
-        # Basic scalar
-        s = str(result)
+        # Basic scalar — use the basic-type adapter's serialiser when one
+        # is available so that ``bool`` becomes ``"true"``/``"false"`` (not
+        # Python's ``"True"``/``"False"``).
+        adapter = _types.BasicTypes.get(result_type)
+        if adapter is not None and result_type is bool:
+            # bool needs JSON-style lowercase.
+            s = "true" if result else "false"
+        elif adapter is not None and result_type in (int, float):
+            s = str(result)
+        else:
+            s = str(result)
         if returns is not None and returns.compiled_schema is not None:
             err = self._validate_against_schema(
                 "return", result_type, s, result, returns.compiled_schema

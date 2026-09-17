@@ -2,9 +2,21 @@
 # Copyright the fabric-chaincode-python contributors. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Asset Transfer SBE style chaincode for CCAAS.
+"""Asset Transfer SBE style chaincode for CCAAS (fabric-shim low-level API).
 
-This follows the function names from fabric-samples asset-transfer-sbe.
+This follows the function names from fabric-samples asset-transfer-sbe:
+- CreateAsset(assetId, value, owner)
+- ReadAsset(assetId)
+- UpdateAsset(assetId, newValue)
+- DeleteAsset(assetId)
+- TransferAsset(assetId, newOwner, newOwnerOrg)
+- AssetExists(assetId)
+- InitLedger()
+
+This example uses the low-level ``fabric_shim`` package directly.  For an
+equivalent example built on the higher-level ``fabric_contract_api``
+package, see
+``examples/ccaas/fabric-contract-api/asset-transfer-sbe/``.
 """
 
 import json
@@ -12,7 +24,16 @@ import logging
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+# Make sure the repository root is on ``sys.path`` so that the
+# ``src.fabric_shim`` packages can be imported when the file is run directly.
+_HERE = Path(__file__).resolve().parent
+REPO_ROOT = None
+for parent in [_HERE, *_HERE.parents]:
+    if (parent / "src" / "fabric_shim").is_dir():
+        REPO_ROOT = parent
+        break
+if REPO_ROOT is None:
+    REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 

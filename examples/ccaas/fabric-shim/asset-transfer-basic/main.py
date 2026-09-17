@@ -3,8 +3,7 @@
 # contributors. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""
-Basic Fabric Chaincode Example (CCAAS)
+"""Basic Fabric Chaincode Example (CCAAS, fabric-shim low-level API).
 
 This is a simple asset management chaincode that demonstrates:
 - Creating assets
@@ -14,13 +13,30 @@ This is a simple asset management chaincode that demonstrates:
 - Initializing the ledger
 
 Deploy this as a Chaincode-as-a-Service (CCAAS) in Fabric.
+
+This example uses the low-level ``fabric_shim`` package directly — you
+write ``init`` and ``invoke`` methods on a :class:`Chaincode` subclass and
+dispatch transaction names by hand.  For an equivalent example built on the
+higher-level ``fabric_contract_api`` package (which handles dispatch and
+metadata generation for you), see
+``examples/ccaas/fabric-contract-api/asset-transfer-basic/``.
 """
 
 import json
 import sys
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
+# Make sure the repository root is on ``sys.path`` so that the
+# ``src.fabric_shim`` packages can be imported when the file is run directly.
+# Walk up the parent chain looking for the directory that contains ``src/``.
+_HERE = Path(__file__).resolve().parent
+REPO_ROOT = None
+for parent in [_HERE, *_HERE.parents]:
+    if (parent / "src" / "fabric_shim").is_dir():
+        REPO_ROOT = parent
+        break
+if REPO_ROOT is None:
+    REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 

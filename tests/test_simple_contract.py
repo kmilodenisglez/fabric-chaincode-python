@@ -1,15 +1,17 @@
 # SPDX-License-Identifier: Apache-2.0
-"""Functional tests for the CCAAS-style simple_contract.py example.
+"""Functional tests for the CCAAS-style asset-transfer-basic example
+(fabric_contract_api layer).
 
 These tests exercise every transaction of :class:`AssetContract` using an
 in-memory :class:`MockChaincodeStub` that also implements
-``get_state_by_range`` so that :meth:`AssetContract.get_all_assets` can be
+``get_state_by_range`` so that :meth:`AssetContract.GetAllAssets` can be
 exercised end-to-end.
 """
 
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import json
 import os
 import sys
@@ -17,14 +19,38 @@ import unittest
 from typing import Any, Dict, List, Optional
 
 # Allow running tests directly from the repository root.
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "examples")))
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, _REPO_ROOT)
 
-from simple_contract import Asset  # noqa: E402
+
+def _load_example_module():
+    """Load the example ``main.py`` under a unique module name.
+
+    Using ``importlib.util.spec_from_file_location`` lets us avoid clashes
+    with other test files that also need to import a ``main.py`` example.
+    """
+    path = os.path.join(
+        _REPO_ROOT,
+        "examples", "ccaas", "fabric-contract-api",
+        "asset-transfer-basic", "main.py",
+    )
+    spec = importlib.util.spec_from_file_location("ccaas_basic_example", path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["ccaas_basic_example"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+example_main = _load_example_module()
+
 from src.fabric_contract_api import (  # noqa: E402
     Contract,
     ContractChaincode,
 )
+
+# Re-export for convenience.
+Asset = example_main.Asset
+AssetContract = example_main.AssetContract
 
 
 def _read_response_payload(resp):
@@ -147,7 +173,6 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         # Clear the shared store before each test.
         MockChaincodeStub._shared_store = {}
-        from simple_contract import AssetContract
         self.cc = ContractChaincode.new_chaincode(AssetContract())
 
     async def _invoke(self, function: str, *params: str):
