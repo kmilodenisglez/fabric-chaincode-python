@@ -153,11 +153,25 @@ class AssetContract(Contract):
             await self._write_asset(ctx, asset)
 
     async def CreateAsset(self, ctx: TransactionContextInterface,
-                             asset: Asset) -> None:
+                             asset_id: str, color: str, size: int,
+                             owner: str, appraised_value: int) -> None:
         """Create a new asset on the ledger.
+
+        Mirrors the Go ``asset-transfer-basic`` signature — five separate
+        scalar args, so clients can invoke it with::
+
+            peer chaincode invoke -c \\
+              '{"Args":["CreateAsset","asset1","blue","10","alice","100"]}'
 
         Errors out if an asset with the same ID already exists.
         """
+        asset = Asset(
+            id=asset_id,
+            color=color,
+            size=int(size),
+            owner=owner,
+            appraised_value=int(appraised_value),
+        )
         existing = await ctx.get_stub().get_state(asset.id)
         if existing:
             raise ValueError(f"asset {asset.id} already exists")
@@ -172,11 +186,22 @@ class AssetContract(Contract):
         return asset
 
     async def UpdateAsset(self, ctx: TransactionContextInterface,
-                             asset: Asset) -> None:
+                             asset_id: str, color: str, size: int,
+                             owner: str, appraised_value: int) -> None:
         """Update an existing asset on the ledger.
 
-        Errors out if no asset exists at ``asset.id``.
+        Mirrors the Go ``asset-transfer-basic`` signature — five separate
+        scalar args, so clients can invoke it the same way as ``CreateAsset``.
+
+        Errors out if no asset exists at ``asset_id``.
         """
+        asset = Asset(
+            id=asset_id,
+            color=color,
+            size=int(size),
+            owner=owner,
+            appraised_value=int(appraised_value),
+        )
         existing = await ctx.get_stub().get_state(asset.id)
         if not existing:
             raise ValueError(

@@ -9,8 +9,10 @@ It implements the **same** asset-management transactions
 - **Auto-dispatches** Init/Invoke calls to the right contract method — you
   don't write a big `if action == "..."` dispatcher.
 - **Auto-converts** the string args coming from the peer into typed Python
-  values (via the JSON serializer) — e.g. `CreateAsset(ctx, asset: Asset)`
-  receives a fully-built `Asset` dataclass, not five raw strings.
+  values (via the JSON serializer) — e.g. `CreateAsset(ctx, asset_id: str,
+  color: str, size: int, owner: str, appraised_value: int)` receives
+  properly-typed scalars; you don't have to write `int(inputs[2])`
+  yourself.
 - **Auto-generates** JSON-Schema metadata and exposes it through the
   built-in `org.hyperledger.fabric:get_metadata` system contract.
 - **Validates** parameter and return types against the JSON schema at
@@ -22,10 +24,19 @@ It implements the **same** asset-management transactions
 | -------------------------------- | --------------------------------- | ----------------------------------------------- |
 | Dispatch                          | Hand-rolled `if action == ...`    | Automatic, via reflection                       |
 | Argument types                    | `inputs[0]`, `inputs[1]`, ...      | Named, type-annotated Python parameters         |
-| Complex args (e.g. an Asset)      | Manual `json.loads` / `dict()`     | Dataclass passed directly                       |
+| Numeric conversion                | Manual `int(inputs[2])`            | Automatic via the JSON serializer               |
 | Metadata / `GetMetadata`          | Not provided                      | Auto-generated, exposed via system contract     |
 | Read-only tagging (`EVALUATE`)   | Not provided                      | `get_evaluate_transactions()` returns the list  |
 | Code size                         | ~135 lines                        | ~150 lines (most are docstrings)               |
+
+> **Note on signatures**: in the Go `asset-transfer-basic` sample (and
+> in the fabric-shim version of this sample), `CreateAsset` / `UpdateAsset`
+> take 5 separate scalar args — `id`, `color`, `size`, `owner`,
+> `appraised_value`.  This contract-API version uses the same signature
+> so the same `peer chaincode invoke -c '{"Args":["CreateAsset","1","blue","35","jerry","1000"]}'`
+> command works for both versions.  The internal `Asset` dataclass is
+> built by the contract function from those scalars — clients never
+> have to send a JSON-encoded object.
 
 ## Prerequisites
 
@@ -92,13 +103,24 @@ export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
 cd /path/to/test-network-nano-bash
 . ./peer1admin.sh
 
-# Create an asset — note the Asset is sent as a JSON object (one arg).
+# Create an asset — 5 separate scalar args (matches the Go sample
+# and the fabric-shim version of this chaincode).
 ASSET_ID=my-asset-$(date +%s)
 peer chaincode invoke \
   -o 127.0.0.1:6050 \
   -C mychannel \
   -n basic \
   -c '{"Args":["CreateAsset","'"$ASSET_ID"'","blue","10","alice","100"]}' \
+  --waitForEvent \
+  --tls \
+  --cafile "$PWD/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt"
+
+# Update the asset — same 5 scalar args.
+peer chaincode invoke \
+  -o 127.0.0.1:6050 \
+  -C mychannel \
+  -n basic \
+  -c '{"Args":["UpdateAsset","'"$ASSET_ID"'","green","20","alice","200"]}' \
   --waitForEvent \
   --tls \
   --cafile "$PWD/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/ca.crt"
