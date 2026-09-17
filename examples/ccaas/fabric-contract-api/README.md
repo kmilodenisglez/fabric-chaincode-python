@@ -11,7 +11,7 @@ schema validation automatically.
 ## When to choose fabric-contract-api
 
 - You want to focus on **business logic** rather than request dispatch.
-- You want **typed parameters** — `def CreateAsset(self, ctx, asset: Asset)`
+- You want **typed parameters** — `def CreateAsset(self, ctx: TransactionContextInterface, asset_id: str, color: str, size: int, owner: str, appraised_value: int)`
   instead of `inputs[0]`, `inputs[1]`, ...
 - You want **auto-generated metadata** exposed through the built-in
   `org.hyperledger.fabric:get_metadata` system contract.

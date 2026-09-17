@@ -194,7 +194,7 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
         asset = {"id": "asset100", "color": "pink", "size": 7,
                   "owner": "Alice", "appraised_value": 800}
         # Create
-        resp = await self._invoke("CreateAsset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", "asset100", "pink", "7", "Alice", "800")
         self.assertEqual(resp.status, 200, "create should succeed")
         # Read
         resp = await self._invoke("ReadAsset", "asset100")
@@ -203,7 +203,7 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
         # Update
         updated = dict(asset)
         updated["color"] = "green"
-        resp = await self._invoke("UpdateAsset", json.dumps(updated))
+        resp = await self._invoke("UpdateAsset", "asset100", "green", "7", "Alice", "800")
         self.assertEqual(resp.status, 200, "update should succeed")
         # Read again to verify
         resp = await self._invoke("ReadAsset", "asset100")
@@ -221,9 +221,9 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
     async def test_create_duplicate(self):
         asset = {"id": "asset200", "color": "white", "size": 3,
                   "owner": "Bob", "appraised_value": 50}
-        resp = await self._invoke("CreateAsset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", "asset200", "white", "3", "Bob", "50")
         self.assertEqual(resp.status, 200, "first create should succeed")
-        resp = await self._invoke("CreateAsset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", "asset200", "white", "3", "Bob", "50")
         self.assertGreaterEqual(resp.status, 400, "duplicate create should error")
 
     async def test_get_all_assets_empty(self):
@@ -234,7 +234,7 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
     async def test_namespaced_call(self):
         asset = {"id": "asset300", "color": "gold", "size": 1,
                   "owner": "Carol", "appraised_value": 1000}
-        resp = await self._invoke("AssetContract:CreateAsset", json.dumps(asset))
+        resp = await self._invoke("AssetContract:CreateAsset", "asset300", "gold", "1", "Carol", "1000")
         self.assertEqual(resp.status, 200)
         resp = await self._invoke("AssetContract:ReadAsset", "asset300")
         self.assertEqual(resp.status, 200)
