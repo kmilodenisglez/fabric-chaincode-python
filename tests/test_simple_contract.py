@@ -191,21 +191,22 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(assets[0]["color"], "blue")
 
     async def test_create_read_update_delete(self):
-        asset = {"id": "asset100", "color": "pink", "size": 7,
-                  "owner": "Alice", "appraised_value": 800}
-        # Create
-        resp = await self._invoke("CreateAsset", json.dumps(asset))
+        # Create — 5 separate scalar args matching the Go asset-transfer-basic
+        # signature.  Clients invoke via:
+        #   peer chaincode invoke -c \
+        #     '{"Args":["CreateAsset","asset100","pink","7","Alice","800"]}'
+        resp = await self._invoke("CreateAsset", "asset100", "pink", "7", "Alice", "800")
         self.assertEqual(resp.status, 200, "create should succeed")
         # Read
         resp = await self._invoke("ReadAsset", "asset100")
         self.assertEqual(resp.status, 200, "read should succeed")
-        self.assertEqual(json.loads(_read_response_payload(resp).decode("utf-8")), asset)
-        # Update
-        updated = dict(asset)
-        updated["color"] = "green"
-        resp = await self._invoke("UpdateAsset", json.dumps(updated))
+        expected = {"id": "asset100", "color": "pink", "size": 7,
+                    "owner": "Alice", "appraised_value": 800}
+        self.assertEqual(json.loads(_read_response_payload(resp).decode("utf-8")), expected)
+        # Update — also 5 scalar args
+        resp = await self._invoke("UpdateAsset", "asset100", "green", "7", "Alice", "800")
         self.assertEqual(resp.status, 200, "update should succeed")
-        # Read again to verify
+        # Read again to verify the new colour
         resp = await self._invoke("ReadAsset", "asset100")
         self.assertEqual(
             json.loads(_read_response_payload(resp).decode("utf-8"))["color"],
@@ -219,11 +220,9 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
         self.assertGreaterEqual(resp.status, 400, "read after delete should error")
 
     async def test_create_duplicate(self):
-        asset = {"id": "asset200", "color": "white", "size": 3,
-                  "owner": "Bob", "appraised_value": 50}
-        resp = await self._invoke("CreateAsset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", "asset200", "white", "3", "Bob", "50")
         self.assertEqual(resp.status, 200, "first create should succeed")
-        resp = await self._invoke("CreateAsset", json.dumps(asset))
+        resp = await self._invoke("CreateAsset", "asset200", "white", "3", "Bob", "50")
         self.assertGreaterEqual(resp.status, 400, "duplicate create should error")
 
     async def test_get_all_assets_empty(self):
@@ -232,9 +231,8 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(json.loads(_read_response_payload(resp).decode("utf-8")), [])
 
     async def test_namespaced_call(self):
-        asset = {"id": "asset300", "color": "gold", "size": 1,
-                  "owner": "Carol", "appraised_value": 1000}
-        resp = await self._invoke("AssetContract:CreateAsset", json.dumps(asset))
+        # 5 separate scalar args, namespaced.
+        resp = await self._invoke("AssetContract:CreateAsset", "asset300", "gold", "1", "Carol", "1000")
         self.assertEqual(resp.status, 200)
         resp = await self._invoke("AssetContract:ReadAsset", "asset300")
         self.assertEqual(resp.status, 200)
@@ -260,6 +258,15 @@ class SimpleContractTests(unittest.IsolatedAsyncioTestCase):
                 self.assertIn("EVALUATE", tx["tag"])
             else:
                 self.assertIn("SUBMIT", tx["tag"])
+        # CreateAsset / UpdateAsset now expose 5 separate scalar params
+        # matching the Go asset-transfer-basic signature.
+        for tx in asset_meta["transactions"]:
+            if tx["name"] in ("CreateAsset", "UpdateAsset"):
+                params = [p["name"] for p in tx.get("parameters", [])]
+                self.assertEqual(len(params), 5,
+                                 f"{tx['name']} should have 5 params, got {params}")
+        # Sanity-check the on-chain contract name.
+        self.assertEqual(asset_meta["name"], "AssetContract")
 
     async def test_unknown_function(self):
         resp = await self._invoke("nonexistent_function")

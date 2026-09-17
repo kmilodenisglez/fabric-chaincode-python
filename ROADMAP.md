@@ -3,7 +3,8 @@
 ## Q3 2026 (Present)
 
 - [x] Functional CCAAS
-- [x] Basic contract API
+- [x] Fabric Shim API (low-level chaincode api)
+- [x] Fabric Contract API (high-level chaincode api)
 - [x] Usage examples
 - [ ] Integration tests with Fabric network
 
