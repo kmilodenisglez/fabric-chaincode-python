@@ -245,6 +245,8 @@ class Handler:
         message — used for pagination.
         """
         msg_pb = ccshim_pb2.GetStateByRange()
+        # NB: the protobuf field names are camelCase (startKey/endKey), not
+        # snake_case.
         msg_pb.startKey = start_key or ""
         msg_pb.endKey = end_key or ""
         msg_pb.collection = collection

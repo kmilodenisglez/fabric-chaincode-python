@@ -160,7 +160,7 @@ class ChaincodeStub(ChaincodeStubInterface):
             tx_id=self.tx_id,
             initial_response=raw,
             response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
-            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.resultBytes),
         )
 
     async def get_state_by_range_with_pagination(self, start_key: str, end_key: str,
@@ -176,7 +176,7 @@ class ChaincodeStub(ChaincodeStubInterface):
         from fabric_protos.ledger.queryresult import kv_query_result_pb2 as kv_pb
 
         meta = ccshim_pb2.QueryMetadata()
-        meta.pagesize = int(page_size)
+        meta.pageSize = int(page_size)
         meta.bookmark = bookmark or ""
         raw = await self.client.handle_get_state_by_range(
             collection, start_key, end_key,
@@ -188,7 +188,7 @@ class ChaincodeStub(ChaincodeStubInterface):
             tx_id=self.tx_id,
             initial_response=raw,
             response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
-            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.resultBytes),
         )
 
     async def get_query_result(self, query: str):
@@ -210,7 +210,7 @@ class ChaincodeStub(ChaincodeStubInterface):
             tx_id=self.tx_id,
             initial_response=raw,
             response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
-            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.resultBytes),
         )
 
     async def get_query_result_with_pagination(self, query: str, page_size: int,
@@ -222,7 +222,7 @@ class ChaincodeStub(ChaincodeStubInterface):
         from fabric_protos.ledger.queryresult import kv_query_result_pb2 as kv_pb
 
         meta = ccshim_pb2.QueryMetadata()
-        meta.pagesize = int(page_size)
+        meta.pageSize = int(page_size)
         meta.bookmark = bookmark or ""
         raw = await self.client.handle_get_query_result(
             collection, query, self.channel_id, self.tx_id,
@@ -234,7 +234,7 @@ class ChaincodeStub(ChaincodeStubInterface):
             tx_id=self.tx_id,
             initial_response=raw,
             response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
-            parser=lambda qrb: kv_pb.KV.FromString(qrb.result_bytes),
+            parser=lambda qrb: kv_pb.KV.FromString(qrb.resultBytes),
         )
 
     async def get_history_for_key(self, key: str):
@@ -256,7 +256,7 @@ class ChaincodeStub(ChaincodeStubInterface):
             tx_id=self.tx_id,
             initial_response=raw,
             response_factory=lambda payload: ccshim_pb2.QueryResponse.FromString(payload),
-            parser=lambda qrb: kv_pb.KeyModification.FromString(qrb.result_bytes),
+            parser=lambda qrb: kv_pb.KeyModification.FromString(qrb.resultBytes),
         )
 
     async def get_state_by_partial_composite_key(self, object_type: str,
