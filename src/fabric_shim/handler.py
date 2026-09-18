@@ -245,8 +245,8 @@ class Handler:
         message — used for pagination.
         """
         msg_pb = ccshim_pb2.GetStateByRange()
-        msg_pb.start_key = start_key or ""
-        msg_pb.end_key = end_key or ""
+        msg_pb.startKey = start_key or ""
+        msg_pb.endKey = end_key or ""
         msg_pb.collection = collection
         if metadata is not None:
             msg_pb.metadata = metadata
