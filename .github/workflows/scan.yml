@@ -1,0 +1,39 @@
+name: "Security vulnerability scan"
+
+on:
+  workflow_call:
+    inputs:
+      ref:
+        description: Branch, tag or SHA to scan.
+        type: string
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies for scanning
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install safety
+
+      - name: Scan dependencies
+        run: safety check --full-report
+
+      - name: Scan source code
+        run: safety check -r requirements.txt
