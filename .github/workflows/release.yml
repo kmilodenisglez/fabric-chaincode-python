@@ -28,6 +28,7 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'
+          node-version: 'none'
 
       - name: Install build dependencies
         run: |
