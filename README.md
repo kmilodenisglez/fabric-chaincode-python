@@ -1,88 +1,36 @@
 # fabric-chaincode-python
 
-Hyperledger Fabric Chaincode shim and Contract API for Python.
+[![Lifecycle](https://img.shields.io/badge/lifecycle-experimental- orange.svg)](https://github.com/hyperledger/fabric-chaincode-python/blob/main/lifecycle.md)
+[![Python Version](https://img.shields.io/pypi/pyversions/fabric-chaincode-python.svg)](https://pypi.org/project/fabric-chaincode-python/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![GitHub Actions](https://github.com/hyperledger/fabric-chaincode-python/workflows/CI/badge.svg)](https://github.com/hyperledger/fabric-chaincode-python/actions?query=workflow%3ACI)
+[![GitHub Release](https://img.shields.io/github/v/release/hyperledger/fabric-chaincode-python.svg)](https://github.com/hyperledger/fabric-chaincode-python/releases)
 
-Status
-------
-- Experimental implementation of a Python chaincode shim and contract API.
-- CI runs with Python 3.11; supported Python versions are 3.10 and 3.11.
+# Hyperledger Fabric Chaincode shim and Contract API for Python
 
-Requirements
-------------
-- Python 3.10+ (3.11 recommended)
-- See `requirements.txt` for runtime dependencies
+This repository provides the Python implementation of Hyperledger Fabric chaincode shim and contract API. Chaincodes (smart contracts) can be written in Python to run inside Hyperledger Fabric peers.
 
-Quick start (development)
--------------------------
-Clone the repository and create a virtual environment:
+## Documentation
 
-```bash
-git clone https://github.com/kmilodenisglez/fabric-chaincode-python.git
-cd fabric-chaincode-python
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install --upgrade pip
-pip install -r requirements.txt
-```
+- API documentation: https://hyperledger.github.io/fabric-chaincode-python/
+- Full Documentation on Hyperledger Fabric: https://hyperledger-fabric.readthedocs.io/
+- Samples repository: https://github.com/hyperledger/fabric-samples
+- Quick-start tutorial: TUTORIAL.md
 
-Run tests:
+## Compatibility
 
-```bash
-pytest -q
-```
+For details on what Python versions and Hyperledger Fabric versions can be used, see the [COMPATIBILITY.md](COMPATIBILITY.md).
 
-Build a wheel (release)
------------------------
-Build a wheel that can be published or installed:
+## npm Shrinkwrap
 
-```bash
-python -m pip install --upgrade build
-python -m build --wheel --no-isolation
-# artifact will be in dist/*.whl
-```
+Strongly recommended to create a `requirements.txt` file after testing and before putting your contract into production.
 
-Protobuf bindings
------------------
-This repository consumes the official Python bindings published to PYPI from
-`hyperledger/fabric-protos`:
+## Contributing
 
-- Package name: `hyperledger-fabric-protos`
-- Import namespace: `fabric_protos`
+If you are interested in contributing updates to this project, please start with the [contributing guide](CONTRIBUTING.md).
 
-They are installed as a regular dependency via requirements.txt. For custom bindings (local checkout, specific upstream commit) see PROTOS.md.
+There is also a [release guide](RELEASING.md) describing the process for publishing new versions.
 
-No vendored protobuf runtime package is required in this repository.
-If you need to regenerate bindings locally for debugging, use
-`scripts/gen_protos.sh` and keep generated/runtime versions compatible.
+## Build Status
 
-Running a chaincode service (example)
-------------------------------------
-Set the environment variables expected by the example chaincode server:
-
-```bash
-export CHAINCODE_ID=basic_1.0:your_package_id_here
-export CHAINCODE_SERVER_ADDRESS=127.0.0.1:9999
-```
-
-Then start the example service (if `main.py` or an example is present):
-
-```bash
-./.venv/bin/python examples/ccaas/asset-transfer-basic/main.py
-```
-
-Contributing
-------------
-- Follow the Developer Certificate of Origin (DCO): sign commits with
-	`Signed-off-by: Your Name <you@example.com>` (the repository contains a
-	DCO check workflow).
-- The project uses the Apache-2.0 license.
-
-Releasing
----------
-For information on how to create releases and publish to PyPI, see [RELEASING.md](RELEASING.md).
-
-More information
-----------------
-- [RELEASING.md](RELEASING.md) — Release process and PyPI publishing
-- [PROTOS.md](PROTOS.md) — Guidance on handling Fabric protobufs
-- `scripts/gen_protos.sh` — Protobuf binding regeneration instructions
+CI runs with Python 3.11 on `main` and `release-*` branches, and on pull requests.

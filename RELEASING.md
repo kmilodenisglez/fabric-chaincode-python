@@ -8,7 +8,7 @@ The project uses a **main + release branch** model:
 
 - **`main`** — Development branch with latest features and fixes
 - **`release-2.5`** — Release maintenance branch for v2.5.x patch releases
-- **Tags** — Git tags (e.g., `v2.5.0`, `v2.5.1`) trigger automated wheel builds and optional PyPI publishing
+- **Tags** — Git tags (e.g., `v2.5.0`, `v2.5.1`) trigger automated wheel builds and PyPI publishing
 
 ## Making a Release
 
@@ -16,10 +16,7 @@ The project uses a **main + release branch** model:
 
 1. Ensure you have push access to the repository
 2. All commits must be signed off with DCO (`-s` flag in git commit)
-3. Tests must pass locally:
-   ```bash
-   pytest -v
-   ```
+3. Tests must pass locally: `pytest -v`
 
 ### Step-by-Step Release Process
 
@@ -56,6 +53,8 @@ git push origin v2.5.X
 
 Replace `X` with the patch version number (e.g., `v2.5.1`, `v2.5.2`, etc.).
 
+The tag pattern follows semver: `v[0-9]+.[0-9]+.[0-9]+` or `v[0-9]+.[0-9]+.[0-9]+-*` (prerelease).
+
 #### 4. Monitor the Workflow
 
 The tag push automatically triggers the release workflow (`.github/workflows/release.yml`):
@@ -65,12 +64,13 @@ gh run list --repo kmilodenisglez/fabric-chaincode-python --workflow release.yml
 ```
 
 Expected workflow steps:
+
 1. ✅ Checkout repository
 2. ✅ Set up Python 3.11
 3. ✅ Install build dependencies
-4. ✅ Build wheel
+4. ✅ Build distribution (sdist + wheel)
 5. ✅ Upload wheel artifact
-6. 📤 (Optional) Publish to PyPI (if `PYPI_API_TOKEN` is configured)
+6. 📤 Publish to PyPI (if `PYPI_API_TOKEN` is configured and tag is semver)
 
 ### Verifying the Release
 
@@ -83,6 +83,7 @@ gh run view <RUN_ID> --repo kmilodenisglez/fabric-chaincode-python --log
 #### Access the Wheel Artifact
 
 Artifacts are available in GitHub Actions run details:
+
 1. Visit: https://github.com/kmilodenisglez/fabric-chaincode-python/actions
 2. Click the successful release run (tagged with `v2.5.X`)
 3. Download the `wheel` artifact (contains `.whl` file)
@@ -100,17 +101,17 @@ python -c "import src.fabric_shim; print('✓ Package imported successfully')"
 
 To enable automatic PyPI publishing on releases:
 
-#### 1. Create a PyPI Account
-- Go to https://pypi.org/account/register/
-- Create an account or use existing credentials
+1. Create a PyPI Account
+   - Go to https://pypi.org/account/register/
+   - Create an account or use existing credentials
 
-#### 2. Generate an API Token
-- Log into PyPI
-- Navigate to Account → API Tokens
-- Create a new token with "Entire repository" scope
-- Copy the token (starts with `pypi-`)
+2. Generate an API Token
+   - Log into PyPI
+   - Navigate to Account → API Tokens
+   - Create a new token with "Entire repository" scope
+   - Copy the token (starts with `pypi-`)
 
-#### 3. Add GitHub Secret
+3. Add GitHub Secret
 
 ```bash
 gh secret set PYPI_API_TOKEN --repo kmilodenisglez/fabric-chaincode-python
@@ -118,6 +119,7 @@ gh secret set PYPI_API_TOKEN --repo kmilodenisglez/fabric-chaincode-python
 ```
 
 Verify the secret is set:
+
 ```bash
 gh secret list --repo kmilodenisglez/fabric-chaincode-python
 ```
@@ -125,8 +127,9 @@ gh secret list --repo kmilodenisglez/fabric-chaincode-python
 ### Publishing Process
 
 Once the PyPI token is configured, releases automatically:
-1. Build the wheel
-2. Attempt to publish to PyPI (continues on error if token is invalid/missing)
+
+1. Build the wheel and sdist
+2. Publish to PyPI using [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) (OIDC-based, no need for static token in workflow)
 
 You can also manually publish a built wheel:
 
@@ -140,11 +143,13 @@ python -m twine upload dist/fabric-chaincode-python-*.whl -u __token__ -p $PYPI_
 ### Build Fails in Workflow
 
 Check the workflow logs:
+
 ```bash
 gh run view <RUN_ID> --repo kmilodenisglez/fabric-chaincode-python --log
 ```
 
 Common issues:
+
 - **Missing dependencies**: Ensure `requirements.txt` and `pyproject.toml` are in sync
 - **Import errors**: Verify `setup.py` correctly loads the version without importing the package
 - **YAML syntax errors**: Validate `.github/workflows/release.yml` with `yamllint`
@@ -186,3 +191,4 @@ git push origin --delete v2.5.X
 - [PyPI API Tokens](https://pypi.org/help/#apitoken)
 - [GitHub Actions](https://github.com/features/actions)
 - [DCO Sign-off](https://probot.github.io/apps/dco/)
+- [pypa/gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish)
