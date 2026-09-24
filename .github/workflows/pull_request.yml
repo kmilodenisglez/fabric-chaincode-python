@@ -6,6 +6,9 @@ on:
       - main
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
@@ -18,7 +21,7 @@ jobs:
     uses: ./.github/workflows/scan.yml
 
   pull-request:
-    needs: test
+    needs: [test, scan]
     name: Pull request success
     runs-on: ubuntu-latest
     steps:

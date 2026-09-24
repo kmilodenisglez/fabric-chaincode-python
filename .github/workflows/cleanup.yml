@@ -2,7 +2,6 @@ name: Cleanup Old Workflow Runs
 
 on:
   schedule:
-    # Run daily at 2 AM UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
     inputs:
@@ -14,7 +13,7 @@ on:
 jobs:
   cleanup:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     concurrency:
       group: workflow-cleanup
       cancel-in-progress: false
@@ -41,6 +40,7 @@ jobs:
             });
 
             let deletedCount = 0;
+            let failedCount = 0;
             for (const workflow of workflows) {
               const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
                 owner,
@@ -60,9 +60,10 @@ jobs:
                   await github.rest.actions.deleteWorkflowRun({ owner, repo, run_id: run.id });
                   deletedCount++;
                 } catch (error) {
+                  failedCount++;
                   console.log(`Failed to delete run ${run.id}: ${error.message}`);
                 }
               }
             }
 
-            console.log(`Deleted ${deletedCount} workflow runs`);
+            console.log(`Deleted ${deletedCount} workflow runs, ${failedCount} failures`);
